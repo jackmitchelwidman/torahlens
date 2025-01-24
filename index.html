@@ -3,100 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TorahLens</title>
+    <title>Passage Viewer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            line-height: 1.6;
             margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f9f9f9;
         }
-        .container {
-            text-align: center;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+        #main {
             padding: 20px;
-            width: 90%;
-            max-width: 600px;
+            text-align: center;
+            max-width: 800px;
+            margin: auto;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
-            color: #0056b3;
-            font-size: 1.8em;
+            font-size: 24px;
             margin-bottom: 20px;
         }
-        input {
-            width: 80%;
+
+        input[type="text"] {
             padding: 10px;
-            font-size: 1em;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
+            width: calc(100% - 24px);
+            font-size: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
             border-radius: 4px;
         }
+
         button {
-            background-color: #007bff;
+            background-color: #007BFF;
             color: white;
             border: none;
-            padding: 10px 20px;
-            font-size: 1em;
+            padding: 10px 15px;
+            font-size: 16px;
             border-radius: 4px;
             cursor: pointer;
         }
+
         button:hover {
             background-color: #0056b3;
         }
-        .result {
+
+        #result {
             margin-top: 20px;
-            text-align: left;
         }
-        .hebrew {
-            font-size: 1.2em;
-            color: #333;
+
+        #result h2 {
+            font-size: 20px;
             margin-bottom: 10px;
         }
-        .english {
-            font-size: 1em;
-            color: #555;
+
+        #hebrew-text, #english-text {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #f4f4f4;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .error {
+            color: red;
         }
     </style>
+</head>
+<body>
+    <div id="main">
+        <h1>Sefaria Passage Viewer</h1>
+        <input type="text" id="passage" placeholder="Enter a passage (e.g., Genesis 1:1)">
+        <button onclick="fetchPassage()">Fetch Passage</button>
+
+        <div id="result">
+            <h2>Hebrew:</h2>
+            <div id="hebrew-text">(Hebrew text will appear here)</div>
+
+            <h2>English:</h2>
+            <div id="english-text">(English text will appear here)</div>
+        </div>
+    </div>
+
     <script>
-        async function getPassage() {
-            const passage = document.getElementById('passage').value;
-            const response = await fetch(`/get_passage?passage=${encodeURIComponent(passage)}`);
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = ''; // Clear previous results
+        async function fetchPassage() {
+            const passage = document.getElementById("passage").value;
+            if (!passage) {
+                alert("Please enter a passage.");
+                return;
+            }
 
-            if (response.ok) {
+            try {
+                const response = await fetch(`/get_passage?passage=${encodeURIComponent(passage)}`);
                 const data = await response.json();
-                const hebrew = document.createElement('div');
-                hebrew.className = 'hebrew';
-                // Render Hebrew as HTML
-                hebrew.innerHTML = data.hebrew || '<em>No Hebrew text available.</em>';
 
-                const english = document.createElement('div');
-                english.className = 'english';
-                // Render English as HTML
-                english.innerHTML = data.english || '<em>No English text available.</em>';
-
-                resultDiv.appendChild(hebrew);
-                resultDiv.appendChild(english);
-            } else {
-                resultDiv.innerHTML = '<em>Error: Unable to fetch the passage. Please check your input.</em>';
+                if (data.error) {
+                    document.getElementById("hebrew-text").innerHTML = `<p class='error'>Error: ${data.error}</p>`;
+                    document.getElementById("english-text").innerHTML = "";
+                } else {
+                    document.getElementById("hebrew-text").innerHTML = data.hebrew || "No Hebrew text found.";
+                    document.getElementById("english-text").innerHTML = data.english || "No English text found.";
+                }
+            } catch (error) {
+                console.error("Error fetching passage:", error);
+                document.getElementById("hebrew-text").innerHTML = "<p class='error'>An error occurred while fetching the passage.</p>";
+                document.getElementById("english-text").innerHTML = "";
             }
         }
     </script>
-</head>
-<body>
-    <div class="container">
-        <h1>TorahLens</h1>
-        <input type="text" id="passage" placeholder="e.g., Genesis 1:3">
-        <button onclick="getPassage()">Get Passage</button>
-        <div id="result" class="result"></div>
-    </div>
 </body>
 </html>
 

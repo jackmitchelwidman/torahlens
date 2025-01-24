@@ -13,14 +13,18 @@ def get_passage():
     passage = request.args.get('passage')
     sefaria_url = f"https://www.sefaria.org/api/texts/{passage}"
     response = requests.get(sefaria_url)
-    
-    # Print the raw API response for debugging
-    print(f"API Response for passage '{passage}':", response.json())
 
     if response.status_code == 200:
         data = response.json()
-        hebrew = '<br>'.join(data.get('he', ['No Hebrew text found.']))
-        english = '<br>'.join(data.get('text', ['No English text found.']))
+
+        # Get Hebrew and English text arrays
+        hebrew_text = data.get('he', [])
+        english_text = data.get('text', [])
+
+        # Ensure the text arrays are joined correctly
+        hebrew = '<br>'.join(hebrew_text) if hebrew_text else 'No Hebrew text found.'
+        english = '<br>'.join(english_text) if english_text else 'No English text found.'
+
         return jsonify({'hebrew': hebrew, 'english': english})
     else:
         return jsonify({'error': 'Unable to fetch passage. Please check your input.'}), 400
