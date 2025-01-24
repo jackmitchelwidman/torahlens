@@ -4,6 +4,11 @@ import os
 
 app = Flask(__name__)
 
+# Root route to handle the default landing page
+@app.route('/')
+def home():
+    return "Welcome to ToraLens! Use /get_passage?passage=<reference> to fetch a passage."
+
 @app.route('/get_passage', methods=['GET'])
 def get_passage():
     passage = request.args.get('passage')
