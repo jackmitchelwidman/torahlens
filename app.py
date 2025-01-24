@@ -1,13 +1,13 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import requests
 import os
 
 app = Flask(__name__)
 
-# Root route to handle the default landing page
+# Serve index.html at the root endpoint
 @app.route('/')
 def home():
-    return "Welcome to ToraLens! Use /get_passage?passage=<reference> to fetch a passage."
+    return send_from_directory('.', 'index.html')
 
 @app.route('/get_passage', methods=['GET'])
 def get_passage():
