@@ -1,13 +1,12 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_file
 import requests
 import os
 
 app = Flask(__name__)
 
-# Serve index.html at the root endpoint
 @app.route('/')
 def home():
-    return send_from_directory('.', 'index.html')
+    return send_file('index.html')  # Serve the index.html file
 
 @app.route('/get_passage', methods=['GET'])
 def get_passage():
