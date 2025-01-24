@@ -74,16 +74,18 @@
                 const data = await response.json();
                 const hebrew = document.createElement('div');
                 hebrew.className = 'hebrew';
-                hebrew.innerText = data.hebrew || 'No Hebrew text available.';
+                // Render Hebrew as HTML
+                hebrew.innerHTML = data.hebrew || '<em>No Hebrew text available.</em>';
 
                 const english = document.createElement('div');
                 english.className = 'english';
-                english.innerText = data.english || 'No English text available.';
+                // Render English as HTML
+                english.innerHTML = data.english || '<em>No English text available.</em>';
 
                 resultDiv.appendChild(hebrew);
                 resultDiv.appendChild(english);
             } else {
-                resultDiv.innerText = 'Error: Unable to fetch the passage. Please check your input.';
+                resultDiv.innerHTML = '<em>Error: Unable to fetch the passage. Please check your input.</em>';
             }
         }
     </script>
