@@ -6,8 +6,8 @@
     <title>TorahLens</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+            font-family: "David Libre", serif;
+            line-height: 1.8;
             margin: 0;
             padding: 0;
             display: flex;
@@ -15,7 +15,8 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #f9f9f9;
+            background-color: #eaf3fa;
+            color: #1f4e78;
         }
 
         #main {
@@ -24,33 +25,37 @@
             max-width: 800px;
             margin: auto;
             background: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #1f4e78;
+            border-radius: 10px;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 20px;
+            color: #003366;
+            text-shadow: 1px 1px 2px #7ba0c5;
         }
 
         input[type="text"] {
-            padding: 10px;
-            width: calc(100% - 24px);
-            font-size: 16px;
+            padding: 12px;
+            width: calc(100% - 28px);
+            font-size: 18px;
             margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 2px solid #1f4e78;
+            border-radius: 6px;
+            background-color: #f5faff;
         }
 
         button {
-            background-color: #007BFF;
+            background-color: #003366;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 12px 20px;
             font-size: 16px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
         }
 
         button:hover {
@@ -62,24 +67,27 @@
         }
 
         #result h2 {
-            font-size: 20px;
+            font-size: 22px;
             margin-bottom: 10px;
+            color: #003366;
         }
 
         #hebrew-text, #english-text {
-            border: 1px solid #ddd;
-            padding: 10px;
-            background: #f4f4f4;
-            border-radius: 4px;
+            border: 1px solid #1f4e78;
+            padding: 15px;
+            background: #f4f8fb;
+            border-radius: 6px;
             max-height: 300px;
             overflow-y: auto;
             text-align: left;
+            font-family: "Gisha", sans-serif;
         }
 
         .error {
-            color: red;
+            color: #ff4c4c;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=David+Libre:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="main">
