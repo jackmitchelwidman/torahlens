@@ -13,6 +13,9 @@ def get_passage():
     passage = request.args.get('passage')
     sefaria_url = f"https://www.sefaria.org/api/texts/{passage}"
     response = requests.get(sefaria_url)
+    
+    # Print the raw API response for debugging
+    print(f"API Response for passage '{passage}':", response.json())
 
     if response.status_code == 200:
         data = response.json()
