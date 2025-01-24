@@ -13,10 +13,11 @@ def get_passage():
     passage = request.args.get('passage')
     sefaria_url = f"https://www.sefaria.org/api/texts/{passage}"
     response = requests.get(sefaria_url)
+
     if response.status_code == 200:
         data = response.json()
-        hebrew = ''.join(data.get('he', []))  # Combine Hebrew lines
-        english = ' '.join(data.get('text', []))  # Combine English lines
+        hebrew = '<br>'.join(data.get('he', ['No Hebrew text found.']))
+        english = '<br>'.join(data.get('text', ['No English text found.']))
         return jsonify({'hebrew': hebrew, 'english': english})
     else:
         return jsonify({'error': 'Unable to fetch passage. Please check your input.'}), 400
