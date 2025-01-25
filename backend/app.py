@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory
 import os
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_community.chat_models import ChatOpenAI
+from langchain_community.schema import SystemMessage, HumanMessage
 import requests
 
 # Initialize the Flask app
@@ -53,22 +53,20 @@ def get_commentaries():
         data = response.json()
         links = data.get('links', [])
         commentaries = [
-            link for link in links if link.get('category') == 'Commentary' and 'text' in link
+            link for link in links if link.get('category') == 'Commentary' and 'source_text' in link
         ]
 
         if not commentaries:
             return jsonify({'message': 'No commentaries available for this passage.'}), 200
 
-        # Process commentaries and generate a comparison
+        # Prepare commentary text for LangChain
         commentary_texts = "\n\n".join(
-            f"{c.get('source_text')} (by {c.get('source_title')})"
-            for c in commentaries
-            if 'source_text' in c and 'source_title' in c
+            f"{c.get('source_title')}: {c.get('source_text')}" for c in commentaries
         )
 
-        # Use LangChain to generate a comparison
+        # Generate a summary or comparison using LangChain
         messages = [
-            SystemMessage(content="Summarize and compare the following Torah commentaries:"),
+            SystemMessage(content="Compare and summarize the following Torah commentaries."),
             HumanMessage(content=commentary_texts)
         ]
         comparison = llm(messages)
