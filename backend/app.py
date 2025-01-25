@@ -32,7 +32,7 @@ PERSPECTIVE_PROMPTS = {
     
     Philosophical Analysis:""",
     
-    "Religious": """
+    "Theological": """
     Offer a traditional religious interpretation of this biblical passage. 
     Analyze its spiritual significance, theological meaning, and religious significance. 
     Incorporate traditional rabbinic and scriptural commentaries.
