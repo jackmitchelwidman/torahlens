@@ -1,4 +1,3 @@
-```python
 import os
 import re
 import requests
@@ -62,11 +61,14 @@ def get_commentaries():
     for passage in passage_variations:
         try:
             url = f"{SEFARIA_API_URL}/{passage}/commentary"
+            print(f"Attempting URL: {url}")
             
             response = requests.get(url, timeout=REQUEST_TIMEOUT)
             
             if response.status_code == 200:
                 data = response.json()
+                print("Full Response:", data)
+                print("Keys:", data.keys())
                 
                 commentaries = []
                 if "commentary" in data and data["commentary"]:
@@ -96,10 +98,3 @@ def get_commentaries():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-```
-
-This version:
-- Tries multiple passage formatting options
-- Robust error handling
-- Extracts commentaries with clean text
-- Handles potential list/string text formats
