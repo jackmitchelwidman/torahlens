@@ -6,7 +6,7 @@ const App = () => {
   const [hebrew, setHebrew] = useState('');
   const [english, setEnglish] = useState('');
   const [commentaries, setCommentaries] = useState([]);
-  const [comparisons, setComparisons] = useState('');
+  const [comparison, setComparison] = useState('');
   const [loadingPassage, setLoadingPassage] = useState(false);
   const [loadingCommentaries, setLoadingCommentaries] = useState(false);
   const [error, setError] = useState('');
@@ -42,8 +42,8 @@ const App = () => {
       if (data.error) {
         setError(data.error);
       } else {
-        setCommentaries(data.commentaries);
-        setComparisons(data.comparisons);
+        setCommentaries(data.commentaries || []);
+        setComparison(data.comparison || '');
       }
     } catch (err) {
       setError('Error fetching commentaries. Please try again.');
@@ -54,65 +54,39 @@ const App = () => {
   };
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>ToraLens</h1>
-        <p>Explore Torah passages and their commentaries.</p>
-      </header>
-      <main className="app-main">
-        <div className="input-section">
-          <label htmlFor="passage">Enter Passage (e.g., Genesis 1:1):</label>
-          <input
-            type="text"
-            id="passage"
-            value={passage}
-            onChange={(e) => setPassage(e.target.value)}
-            placeholder="Enter passage reference"
-          />
-          <div className="button-group">
-            <button onClick={fetchPassage} disabled={loadingPassage}>
-              {loadingPassage ? 'Loading Passage...' : 'Get Passage'}
-            </button>
-            <button onClick={fetchCommentaries} disabled={loadingCommentaries}>
-              {loadingCommentaries ? 'Loading Commentaries...' : 'Get Commentaries'}
-            </button>
-          </div>
+    <div className="App">
+      <h1>ToraLens</h1>
+      <input
+        type="text"
+        placeholder="Enter passage (e.g., Genesis 1:1)"
+        value={passage}
+        onChange={(e) => setPassage(e.target.value)}
+      />
+      <button onClick={fetchPassage} disabled={loadingPassage}>
+        {loadingPassage ? 'Loading...' : 'Get Passage'}
+      </button>
+      <button onClick={fetchCommentaries} disabled={loadingCommentaries}>
+        {loadingCommentaries ? 'Loading...' : 'Get Commentaries'}
+      </button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {hebrew && <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(hebrew) }} />}
+      {english && <p>{english}</p>}
+      {commentaries.length > 0 && (
+        <div>
+          <h2>Commentaries</h2>
+          {commentaries.map((c, idx) => (
+            <div key={idx}>
+              <strong>{c.source}</strong>: {c.text}
+            </div>
+          ))}
         </div>
-        {error && <p className="error-message">{error}</p>}
-        {hebrew && english && (
-          <div className="passage-section">
-            <h2>Passage</h2>
-            <div className="passage">
-              <div className="hebrew" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(hebrew) }} />
-              <div className="english" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(english) }} />
-            </div>
-          </div>
-        )}
-        {commentaries.length > 0 && (
-          <div className="commentaries-section">
-            <h2>Commentaries</h2>
-            <div className="accordion">
-              {commentaries.map((commentary, index) => (
-                <div key={index} className="accordion-item">
-                  <input type="checkbox" id={`accordion-${index}`} />
-                  <label htmlFor={`accordion-${index}`} className="accordion-title">
-                    {commentary.commentator}
-                  </label>
-                  <div className="accordion-content">
-                    <p dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(commentary.text) }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {comparisons && (
-          <div className="comparisons-section">
-            <h2>Comparisons</h2>
-            <p dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comparisons) }} />
-          </div>
-        )}
-      </main>
+      )}
+      {comparison && (
+        <div>
+          <h2>Comparison</h2>
+          <p>{comparison}</p>
+        </div>
+      )}
     </div>
   );
 };
