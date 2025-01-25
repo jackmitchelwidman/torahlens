@@ -43,13 +43,14 @@ def get_commentaries():
         commentaries = [
             {
                 'commentator': commentary.get('collectiveTitle', {}).get('en', 'Unknown'),
-                'text': '<br>'.join(commentary.get('text', [])) or "No commentary text available."
+                'text': ' '.join(commentary.get('text', [])) or "No commentary text available."
             }
             for commentary in data.get('commentary', [])
         ]
         return jsonify({'commentaries': commentaries})
     except requests.exceptions.RequestException as e:
         return jsonify({'error': f"Failed to fetch data from Sefaria API: {str(e)}"}), 500
+
 
 @app.errorhandler(404)
 def not_found(e):
