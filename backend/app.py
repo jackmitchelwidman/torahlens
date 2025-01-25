@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory
 import os
 from langchain_community.chat_models import ChatOpenAI
-from langchain_community.prompts import SystemMessage, HumanMessage
+from langchain_community.prompts.chat import SystemMessage, HumanMessage
 
 # Initialize the Flask app
 app = Flask(__name__, static_folder='build', static_url_path='')
@@ -36,6 +36,7 @@ def get_commentaries():
     if not passage:
         return jsonify({'error': 'Passage is required.'}), 400
 
+    # Using LangChain to generate commentary comparisons
     messages = [
         SystemMessage(content=f"Compare commentaries for passage: {passage}"),
         HumanMessage(content="What are the main differences?")
