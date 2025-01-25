@@ -52,44 +52,58 @@ def get_commentaries():
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
     
+    # Passage variations to try
     passage_variations = [
         passage_ref,
         passage_ref.replace(" ", "_"),
-        passage_ref.replace(" ", "")
+        passage_ref.replace(" ", ""),
+        passage_ref.replace("_", " ")
     ]
     
     for passage in passage_variations:
         try:
-            url = f"{SEFARIA_API_URL}/{passage}/commentary"
-            print(f"Attempting URL: {url}")
+            # Debugging: print each URL attempt
+            urls = [
+                f"{SEFARIA_API_URL}/{passage}/commentary",
+                f"{SEFARIA_API_URL}/{passage}/he/commentary"
+            ]
             
-            response = requests.get(url, timeout=REQUEST_TIMEOUT)
-            
-            if response.status_code == 200:
-                data = response.json()
-                print("Full Response:", data)
-                print("Keys:", data.keys())
+            for url in urls:
+                print(f"Attempting URL: {url}")
                 
-                commentaries = []
-                if "commentary" in data and data["commentary"]:
-                    for comment in data["commentary"]:
-                        commentator = comment.get("ref", "").split(" on ")[0] or "Unknown"
-                        
-                        text = comment.get("text", "")
-                        if isinstance(text, list):
-                            text = " ".join(filter(None, text))
-                        
-                        text = re.sub('<[^<]+?>', '', text)
-                        text = text.strip()
-                        
-                        if text:
-                            commentaries.append({
-                                "commentator": commentator,
-                                "text": text
-                            })
+                response = requests.get(url, timeout=REQUEST_TIMEOUT)
+                print(f"Response status: {response.status_code}")
                 
-                if commentaries:
-                    return jsonify({"commentaries": commentaries})
+                if response.status_code == 200:
+                    data = response.json()
+                    print(f"Response data keys: {data.keys()}")
+                    
+                    # Check if commentary exists
+                    if "commentary" in data and data["commentary"]:
+                        commentaries = []
+                        for comment in data["commentary"][:5]:  # Limit to first 5 comments
+                            text = comment.get("text", "")
+                            if isinstance(text, list):
+                                text = " ".join(filter(None, text))
+                            
+                            # Clean text, remove HTML tags
+                            text = re.sub('<[^<]+?>', '', text).strip()
+                            
+                            # Extract commentator name
+                            commentator = (
+                                comment.get("ref", "").split(" on ")[0] or 
+                                comment.get("collectiveTitle", "") or 
+                                "Unknown"
+                            )
+                            
+                            if text:
+                                commentaries.append({
+                                    "commentator": commentator,
+                                    "text": text
+                                })
+                        
+                        if commentaries:
+                            return jsonify({"commentaries": commentaries})
         
         except Exception as e:
             print(f"Error fetching commentaries for {passage}: {e}")
