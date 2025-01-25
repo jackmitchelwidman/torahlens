@@ -1,5 +1,4 @@
 import os
-import re
 import requests
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
@@ -51,6 +50,17 @@ PERSPECTIVE_PROMPTS = {
     
     Secular Analysis:"""
 }
+
+@app.route("/")
+def serve():
+    return send_from_directory(app.static_folder, "index.html")
+
+@app.route("/<path:path>")
+def serve_static(path):
+    try:
+        return send_from_directory(app.static_folder, path)
+    except Exception:
+        return send_from_directory(app.static_folder, "index.html")
 
 @app.route("/api/get_passage", methods=["GET"])
 def get_passage():

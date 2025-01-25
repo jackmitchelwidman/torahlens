@@ -10,7 +10,7 @@ const App = () => {
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [error, setError] = useState('');
 
-  const backendUrl = 'https://torahlens-827cce34fdb8.herokuapp.com';
+  const backendUrl = ''; // Leave empty for relative path to the backend.
 
   const fetchPassage = async () => {
     setLoadingPassage(true);
@@ -113,3 +113,4 @@ const App = () => {
 };
 
 export default App;
+
