@@ -53,40 +53,47 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        url = f"{SEFARIA_API_URL}/{passage_ref}?commentary=1&context=0"
+        url = f"{SEFARIA_API_URL}/{passage_ref}/commentary"
         response = requests.get(url, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
-        data = response.json()
         
-        if not data:
-            return jsonify({"commentaries": [], "error": "No commentaries found"}), 200
-
+        data = response.json()
         commentaries = []
         seen_texts = set()
-        
-        for comm in data.get("commentary", []):
-            english_text = comm.get("text", "")
-            if isinstance(english_text, list):
-                english_text = " ".join(str(text) for text in english_text if text)
+
+        # Extract main commentaries array
+        commentary_data = data.get("commentary", [])
+        if isinstance(commentary_data, list):
+            for comment in commentary_data:
+                if not comment:
+                    continue
+                    
+                english_text = comment.get("text", "")
+                commentator = comment.get("collectiveTitle", comment.get("commentator", "Unknown"))
                 
-            commentator = comm.get("commentator", "Unknown")
-            if isinstance(commentator, list):
-                commentator = " ".join(str(c) for c in commentator if c)
-                
-            text_hash = f"{commentator}:{english_text}"
-            
-            if not english_text or text_hash in seen_texts:
-                continue
-                
-            commentaries.append({
-                "commentator": commentator,
-                "english": english_text
-            })
-            seen_texts.add(text_hash)
+                if not english_text or not commentator:
+                    continue
+                    
+                if isinstance(english_text, list):
+                    english_text = " ".join(str(text) for text in english_text if text)
+                if isinstance(commentator, list):
+                    commentator = " ".join(str(c) for c in commentator if c)
+                    
+                text_key = f"{commentator}:{english_text}"
+                if text_key in seen_texts:
+                    continue
+                    
+                seen_texts.add(text_key)
+                commentaries.append({
+                    "commentator": commentator,
+                    "text": english_text
+                })
 
         return jsonify({"commentaries": commentaries})
         
-    except requests.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        print("Error in get_commentaries:", str(e))
+        return jsonify({"error": f"Error fetching commentaries: {str(e)}"}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
