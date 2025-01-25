@@ -67,10 +67,9 @@ def get_commentaries():
 
         for comment in data.get("commentary", []):
             english_text = comment.get("text", "")
-            commentator = (comment.get("heCommentator", "") or 
+            commentator = (comment.get("collectiveTitle", "") or 
                          comment.get("commentator", "") or 
-                         comment.get("sourceHeRef", "") or 
-                         comment.get("ref", "").split(" on ")[0] or 
+                         comment.get("sourceRef", "").split(" on ")[0] or 
                          "Unknown")
             
             if isinstance(english_text, list):
@@ -78,7 +77,6 @@ def get_commentaries():
             if isinstance(commentator, list):
                 commentator = " ".join(filter(None, commentator))
                 
-            # Clean HTML markup from text
             english_text = (english_text.replace("<small>", "")
                                      .replace("</small>", "")
                                      .replace("<sup>", "")
