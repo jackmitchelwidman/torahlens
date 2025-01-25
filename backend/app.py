@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import ChatOpenAI  # Changed import
 from dotenv import load_dotenv
 import requests
 
@@ -39,18 +39,11 @@ def get_passage():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        # Call Sefaria API to get the text
         response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}")
         data = response.json()
-
-        # Extract Hebrew and English texts
         hebrew = data.get("he", "")
         english = data.get("text", "")
-
-        return jsonify({
-            "hebrew": hebrew,
-            "english": english
-        })
+        return jsonify({"hebrew": hebrew, "english": english})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -61,14 +54,9 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        # Get commentaries from Sefaria API
         response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}?commentary=1")
         data = response.json()
-        
-        # Extract commentary data
         commentaries = data.get("commentary", [])
-        
-        # Process and format commentaries
         formatted_commentaries = []
         for commentary in commentaries:
             formatted_commentaries.append({
@@ -76,7 +64,6 @@ def get_commentaries():
                 "text": commentary.get("he", ""),
                 "english": commentary.get("text", "")
             })
-
         return jsonify({"commentaries": formatted_commentaries})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
