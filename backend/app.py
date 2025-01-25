@@ -1,90 +1,70 @@
-from flask import Flask, send_from_directory, jsonify, request
 import os
+from flask import Flask, jsonify, request, send_from_directory
+from langchain_openai import ChatOpenAI  # Updated import for langchain
+from dotenv import load_dotenv
 import requests
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__, static_folder='../frontend/build', static_url_path='')
+app = Flask(__name__, static_folder="../frontend/build", static_url_path="")
 
-# Set your Sefaria API URL and LangChain model
-SEFARIA_API_URL = "https://www.sefaria.org/api/texts/"
-llm = ChatOpenAI(temperature=0)
+# Set up LangChain Chat Model
+llm = ChatOpenAI(
+    model="gpt-3.5-turbo",
+    openai_api_key=os.getenv("OPENAI_API_KEY")
+)
 
-# Serve React frontend
-@app.route('/')
+# Sefaria API configuration
+SEFARIA_API_URL = "https://www.sefaria.org/api/texts"
+
+@app.route("/")
 def serve_frontend():
-    return send_from_directory(app.static_folder, 'index.html')
+    # Serve React's index.html
+    return send_from_directory(app.static_folder, "index.html")
 
-@app.route('/<path:path>')
+@app.route("/<path:path>")
 def serve_static_files(path):
+    # Serve other static files from the React build directory
     if os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
     else:
-        return jsonify({'error': 'Not Found'}), 404
+        return jsonify({"error": "Not Found"}), 404
 
-# API endpoint to fetch a Torah passage
-@app.route('/api/get_passage', methods=['GET'])
+@app.route("/api/get_passage", methods=["GET"])
 def get_passage():
-    passage = request.args.get('passage')
-    if not passage:
-        return jsonify({'error': 'Passage is required.'}), 400
+    # Fetch passage and its translations from Sefaria API
+    passage_ref = request.args.get("passage")
+    if not passage_ref:
+        return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        response = requests.get(f"{SEFARIA_API_URL}{passage}?context=0")
-        if response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch data from Sefaria API.'}), 500
+        response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}")
+        response.raise_for_status()
+        passage_data = response.json()
+        return jsonify(passage_data)
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": "Failed to fetch passage", "details": str(e)}), 500
 
-        data = response.json()
-        return jsonify({
-            'hebrew': data.get('he', ''),
-            'english': data.get('text', '')
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@app.route("/api/generate_commentary", methods=["POST"])
+def generate_commentary():
+    # Generate commentary using LangChain
+    data = request.json
+    passage_ref = data.get("passage")
+    user_input = data.get("user_input")
 
-# API endpoint to fetch commentaries and generate comparisons
-@app.route('/api/get_commentaries', methods=['GET'])
-def get_commentaries():
-    passage = request.args.get('passage')
-    if not passage:
-        return jsonify({'error': 'Passage is required.'}), 400
+    if not passage_ref or not user_input:
+        return jsonify({"error": "Missing required parameters"}), 400
 
     try:
-        response = requests.get(f"{SEFARIA_API_URL}{passage}?with=links")
-        if response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch data from Sefaria API.'}), 500
-
-        data = response.json()
-        links = data.get('links', [])
-        commentaries = [
-            link for link in links if link.get('category') == 'Commentary' and 'source_text' in link
-        ]
-
-        if not commentaries:
-            return jsonify({'message': 'No commentaries available for this passage.'}), 200
-
-        # Prepare text for LangChain
-        commentary_texts = "\n\n".join(
-            f"{c.get('source_title')}: {c.get('source_text')}" for c in commentaries
-        )
-        messages = [
-            SystemMessage(content="Compare and summarize the following Torah commentaries."),
-            HumanMessage(content=commentary_texts)
-        ]
-        comparison = llm(messages)
-
-        return jsonify({
-            'commentaries': [
-                {'source': c.get('source_title'), 'text': c.get('source_text')}
-                for c in commentaries
-            ],
-            'comparison': comparison.content
-        })
+        prompt = f"Provide a detailed commentary on the Torah passage '{passage_ref}' based on the following user input: {user_input}"
+        commentary = llm(prompt)
+        return jsonify({"commentary": commentary})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": "Failed to generate commentary", "details": str(e)}), 500
 
-# Run the app locally
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
