@@ -9,7 +9,7 @@ const App = () => {
   const [loadingPassage, setLoadingPassage] = useState(false);
   const [loadingCommentaries, setLoadingCommentaries] = useState(false);
 
-  const backendUrl = 'http://localhost:5001'; // Replace with your backend URL
+  const backendUrl = 'http://localhost:5000'; // Replace with your backend URL
 
   const fetchPassage = async () => {
     setLoadingPassage(true);
