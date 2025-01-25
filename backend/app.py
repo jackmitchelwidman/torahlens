@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os
 import requests
-from langchain_community.schema import SystemMessage, HumanMessage
+from langchain.schema import SystemMessage, HumanMessage
 from langchain_community.chat_models import ChatOpenAI
 
 # Initialize Flask app
