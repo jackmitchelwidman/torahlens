@@ -1,12 +1,14 @@
 from flask import Flask, jsonify, request, send_from_directory
 import os
 from langchain_openai import OpenAI
+from langchain.chat_models import ChatOpenAI
+import os
 
 # Initialize the Flask app
 app = Flask(__name__, static_folder='build', static_url_path='')
 
 # Initialize LangChain with your API key
-llm = OpenAI(model="gpt-3.5-turbo", openai_api_key=os.getenv("OPENAI_API_KEY"))
+llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route('/')
 def serve_index():
