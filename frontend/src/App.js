@@ -9,8 +9,8 @@ const App = () => {
   const [loadingPassage, setLoadingPassage] = useState(false);
   const [loadingCommentaries, setLoadingCommentaries] = useState(false);
 
-  const backendUrl = 'http://localhost:5000'; // Replace with your backend URL
-
+  const backendUrl = 'https://torahlens.herokuapp.com:5000';
+    
   const fetchPassage = async () => {
     setLoadingPassage(true);
     try {
