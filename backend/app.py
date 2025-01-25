@@ -67,7 +67,11 @@ def get_commentaries():
 
         for comment in data.get("commentary", []):
             english_text = comment.get("text", "")
-            commentator = comment.get("heCommentator", comment.get("commentator", "Unknown"))
+            commentator = (comment.get("heCommentator", "") or 
+                         comment.get("commentator", "") or 
+                         comment.get("sourceHeRef", "") or 
+                         comment.get("ref", "").split(" on ")[0] or 
+                         "Unknown")
             
             if isinstance(english_text, list):
                 english_text = " ".join(filter(None, english_text))
