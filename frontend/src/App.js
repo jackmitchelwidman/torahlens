@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import DOMPurify from 'dompurify';
 
 const App = () => {
   const [passage, setPassage] = useState('');
   const [hebrew, setHebrew] = useState('');
   const [english, setEnglish] = useState('');
   const [commentaries, setCommentaries] = useState([]);
-  const [comparison, setComparison] = useState('');
   const [loadingPassage, setLoadingPassage] = useState(false);
   const [loadingCommentaries, setLoadingCommentaries] = useState(false);
   const [error, setError] = useState('');
@@ -63,18 +61,12 @@ const App = () => {
           placeholder="Enter passage (e.g., Genesis 1:1)"
           style={{ marginRight: '10px', padding: '5px' }}
         />
-        <button onClick={fetchPassage} disabled={loadingPassage}>
+        <button onClick={fetchPassage} disabled={loadingPassage} style={{ marginRight: '10px' }}>
           {loadingPassage ? 'Loading...' : 'Get Passage'}
         </button>
-        {hebrew && english && (
-          <button 
-            onClick={fetchCommentaries} 
-            disabled={loadingCommentaries}
-            style={{ marginLeft: '10px' }}
-          >
-            {loadingCommentaries ? 'Loading...' : 'Get Commentaries'}
-          </button>
-        )}
+        <button onClick={fetchCommentaries} disabled={loadingCommentaries}>
+          {loadingCommentaries ? 'Loading...' : 'Get Commentaries'}
+        </button>
       </div>
 
       {error && <div style={{ color: 'red', margin: '10px 0' }}>{error}</div>}
