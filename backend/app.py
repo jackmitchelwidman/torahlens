@@ -5,16 +5,20 @@ from langchain_community.chat_models import ChatOpenAI
 from dotenv import load_dotenv
 import requests
 
+# Load environment variables
 load_dotenv()
 
+# Initialize Flask app
 app = Flask(__name__, static_folder="build", static_url_path="")
 CORS(app)
 
+# Set up LangChain Chat Model
 llm = ChatOpenAI(
     model="gpt-3.5-turbo",
     openai_api_key=os.getenv("OPENAI_API_KEY")
 )
 
+# Sefaria API configuration
 SEFARIA_API_URL = "https://www.sefaria.org/api/texts"
 REQUEST_TIMEOUT = 10
 
@@ -45,7 +49,7 @@ def get_passage():
         })
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
-                   
+
 @app.route("/api/get_commentaries", methods=["GET"])
 def get_commentaries():
     passage_ref = request.args.get("passage")
@@ -63,12 +67,23 @@ def get_commentaries():
 
         for comment in data.get("commentary", []):
             english_text = comment.get("text", "")
-            commentator = comment.get("collectiveTitle", comment.get("commentator", "Unknown"))
+            commentator = comment.get("heCommentator", comment.get("commentator", "Unknown"))
             
             if isinstance(english_text, list):
                 english_text = " ".join(filter(None, english_text))
             if isinstance(commentator, list):
                 commentator = " ".join(filter(None, commentator))
+                
+            # Clean HTML markup from text
+            english_text = (english_text.replace("<small>", "")
+                                     .replace("</small>", "")
+                                     .replace("<sup>", "")
+                                     .replace("</sup>", "")
+                                     .replace("<i>", "")
+                                     .replace("</i>", "")
+                                     .replace("<br>", " ")
+                                     .replace("<b>", "")
+                                     .replace("</b>", ""))
                 
             if not english_text or not commentator:
                 continue
