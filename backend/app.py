@@ -52,30 +52,27 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        url = f"{SEFARIA_API_URL}/{passage_ref}?commentary=1"
-        response = requests.get(url, timeout=30)
+        # Use a more specific API endpoint and limit data
+        url = f"{SEFARIA_API_URL}/{passage_ref}?commentary=1&pad=0&multiple=0"
+        session = requests.Session()
+        response = session.get(url, timeout=30)
         response.raise_for_status()
         
         data = response.json()
         commentaries = []
-        seen_refs = set()
+        seen_texts = set()
 
-        for comment in data.get("commentary", []):
+        # Process only first 10 commentaries for performance
+        for comment in data.get("commentary", [])[:10]:
             if not comment:
                 continue
-                
-            ref = comment.get("sourceRef", "")
-            if ref in seen_refs:
-                continue
 
+            # Get text and clean it
             english_text = comment.get("text", "")
             if isinstance(english_text, list):
                 english_text = " ".join(str(text) for text in english_text if text)
 
-            commentator = (comment.get("ref", "").split(" on ")[0] or 
-                         comment.get("sourceRef", "").split(" on ")[0] or 
-                         "Unknown")
-
+            # Clean HTML tags
             english_text = (english_text.replace("<small>", "")
                                      .replace("</small>", "")
                                      .replace("<sup>", "")
@@ -85,11 +82,19 @@ def get_commentaries():
                                      .replace("<br>", " ")
                                      .replace("<b>", "")
                                      .replace("</b>", ""))
-                
+
+            # Get commentator name
+            commentator = (comment.get("ref", "").split(" on ")[0] or 
+                         "Unknown Commentator")
+
             if not english_text:
                 continue
-                
-            seen_refs.add(ref)
+
+            text_key = f"{commentator}:{english_text}"
+            if text_key in seen_texts:
+                continue
+
+            seen_texts.add(text_key)
             commentaries.append({
                 "commentator": commentator,
                 "text": english_text
