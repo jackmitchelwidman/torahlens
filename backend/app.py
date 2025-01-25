@@ -45,7 +45,7 @@ def get_passage():
         })
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
-
+                   
 @app.route("/api/get_commentaries", methods=["GET"])
 def get_commentaries():
     passage_ref = request.args.get("passage")
@@ -53,7 +53,7 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        url = f"{SEFARIA_API_URL}/{passage_ref}/commentary"
+        url = f"{SEFARIA_API_URL}/{passage_ref}?commentary=1"
         response = requests.get(url, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         
@@ -61,33 +61,27 @@ def get_commentaries():
         commentaries = []
         seen_texts = set()
 
-        # Extract main commentaries array
-        commentary_data = data.get("commentary", [])
-        if isinstance(commentary_data, list):
-            for comment in commentary_data:
-                if not comment:
-                    continue
-                    
-                english_text = comment.get("text", "")
-                commentator = comment.get("collectiveTitle", comment.get("commentator", "Unknown"))
+        for comment in data.get("commentary", []):
+            english_text = comment.get("text", "")
+            commentator = comment.get("collectiveTitle", comment.get("commentator", "Unknown"))
+            
+            if isinstance(english_text, list):
+                english_text = " ".join(filter(None, english_text))
+            if isinstance(commentator, list):
+                commentator = " ".join(filter(None, commentator))
                 
-                if not english_text or not commentator:
-                    continue
-                    
-                if isinstance(english_text, list):
-                    english_text = " ".join(str(text) for text in english_text if text)
-                if isinstance(commentator, list):
-                    commentator = " ".join(str(c) for c in commentator if c)
-                    
-                text_key = f"{commentator}:{english_text}"
-                if text_key in seen_texts:
-                    continue
-                    
-                seen_texts.add(text_key)
-                commentaries.append({
-                    "commentator": commentator,
-                    "text": english_text
-                })
+            if not english_text or not commentator:
+                continue
+                
+            text_key = f"{commentator}:{english_text}"
+            if text_key in seen_texts:
+                continue
+                
+            seen_texts.add(text_key)
+            commentaries.append({
+                "commentator": commentator,
+                "text": english_text
+            })
 
         return jsonify({"commentaries": commentaries})
         
