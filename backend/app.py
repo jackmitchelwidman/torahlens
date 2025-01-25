@@ -52,26 +52,30 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}?commentary=1&context=0&pad=0", 
-                              timeout=REQUEST_TIMEOUT)
+        url = f"{SEFARIA_API_URL}/{passage_ref}?commentary=1"
+        response = requests.get(url, timeout=30)
         response.raise_for_status()
         
         data = response.json()
         commentaries = []
-        seen_texts = set()
+        seen_refs = set()
 
         for comment in data.get("commentary", []):
+            if not comment:
+                continue
+                
+            ref = comment.get("sourceRef", "")
+            if ref in seen_refs:
+                continue
+
             english_text = comment.get("text", "")
-            # Get English name first, then try other fields
-            commentator = (comment.get("collectiveTitle", "") or 
-                         comment.get("commentator", "") or 
+            if isinstance(english_text, list):
+                english_text = " ".join(str(text) for text in english_text if text)
+
+            commentator = (comment.get("ref", "").split(" on ")[0] or 
                          comment.get("sourceRef", "").split(" on ")[0] or 
                          "Unknown")
-                
-            if isinstance(english_text, list):
-                english_text = " ".join(filter(None, english_text))
-            
-            # Clean HTML markup
+
             english_text = (english_text.replace("<small>", "")
                                      .replace("</small>", "")
                                      .replace("<sup>", "")
@@ -81,15 +85,11 @@ def get_commentaries():
                                      .replace("<br>", " ")
                                      .replace("<b>", "")
                                      .replace("</b>", ""))
-            
-            if not english_text or not commentator:
+                
+            if not english_text:
                 continue
                 
-            text_key = f"{commentator}:{english_text}"
-            if text_key in seen_texts:
-                continue
-                
-            seen_texts.add(text_key)
+            seen_refs.add(ref)
             commentaries.append({
                 "commentator": commentator,
                 "text": english_text
@@ -97,6 +97,8 @@ def get_commentaries():
 
         return jsonify({"commentaries": commentaries})
         
+    except requests.Timeout:
+        return jsonify({"error": "Request timed out. Please try again."}), 504
     except Exception as e:
         print("Error in get_commentaries:", str(e))
         return jsonify({"error": f"Error fetching commentaries: {str(e)}"}), 500
