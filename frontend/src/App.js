@@ -4,9 +4,10 @@ const App = () => {
   const [passage, setPassage] = useState('');
   const [hebrew, setHebrew] = useState('');
   const [english, setEnglish] = useState('');
-  const [commentaries, setCommentaries] = useState([]);
+  const [aiCommentary, setAiCommentary] = useState('');
+  const [perspective, setPerspective] = useState('Secular');
   const [loadingPassage, setLoadingPassage] = useState(false);
-  const [loadingCommentaries, setLoadingCommentaries] = useState(false);
+  const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [error, setError] = useState('');
 
   const backendUrl = 'https://torahlens-827cce34fdb8.herokuapp.com';
@@ -31,27 +32,29 @@ const App = () => {
     }
   };
 
-  const fetchCommentaries = async () => {
-    setLoadingCommentaries(true);
+  const fetchAiCommentary = async () => {
+    setLoadingCommentary(true);
     setError('');
     try {
-      const response = await fetch(`${backendUrl}/api/get_commentaries?passage=${encodeURIComponent(passage.trim())}`);
+      const response = await fetch(
+        `${backendUrl}/api/get_ai_commentary?passage=${encodeURIComponent(passage.trim())}&perspective=${perspective}`
+      );
       const data = await response.json();
       if (data.error) {
         setError(data.error);
       } else {
-        setCommentaries(data.commentaries);
+        setAiCommentary(data.commentary);
       }
     } catch (err) {
-      setError('Error fetching commentaries. Please try again.');
+      setError('Error fetching AI commentary. Please try again.');
       console.error(err);
     } finally {
-      setLoadingCommentaries(false);
+      setLoadingCommentary(false);
     }
   };
 
   return (
-    <div className="App" style={{ padding: '20px' }}>
+    <div className="App" style={{ padding: '20px', maxWidth: '800px', margin: 'auto' }}>
       <h1>TorahLens</h1>
       <div>
         <input
@@ -59,19 +62,38 @@ const App = () => {
           value={passage}
           onChange={(e) => setPassage(e.target.value)}
           placeholder="Enter passage (e.g., Genesis 1:1)"
-          style={{ marginRight: '10px', padding: '5px' }}
+          style={{ marginRight: '10px', padding: '5px', width: '250px' }}
         />
         <button onClick={fetchPassage} disabled={loadingPassage} style={{ marginRight: '10px' }}>
           {loadingPassage ? 'Loading...' : 'Get Passage'}
         </button>
-        <button onClick={fetchCommentaries} disabled={loadingCommentaries}>
-          {loadingCommentaries ? 'Loading...' : 'Get Commentaries'}
+      </div>
+
+      <div style={{ marginTop: '20px' }}>
+        <h3>AI Commentary Perspective</h3>
+        {['Secular', 'Religious', 'Philosophical'].map((perspectiveOption) => (
+          <label key={perspectiveOption} style={{ marginRight: '10px' }}>
+            <input
+              type="radio"
+              value={perspectiveOption}
+              checked={perspective === perspectiveOption}
+              onChange={() => setPerspective(perspectiveOption)}
+            />
+            {perspectiveOption}
+          </label>
+        ))}
+        <button 
+          onClick={fetchAiCommentary} 
+          disabled={!english || loadingCommentary}
+          style={{ marginLeft: '10px' }}
+        >
+          {loadingCommentary ? 'Generating...' : 'Get AI Commentary'}
         </button>
       </div>
 
       {error && <div style={{ color: 'red', margin: '10px 0' }}>{error}</div>}
 
-      {hebrew && (
+      {english && (
         <div style={{ margin: '20px 0' }}>
           <h2>Hebrew Text:</h2>
           <div style={{ direction: 'rtl', textAlign: 'right' }}>{hebrew}</div>
@@ -80,15 +102,10 @@ const App = () => {
         </div>
       )}
 
-      {commentaries.length > 0 && (
-        <div style={{ margin: '20px 0' }}>
-          <h2>Commentaries:</h2>
-          {commentaries.map((commentary, index) => (
-            <div key={index} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}>
-              <h3 style={{ color: '#444', marginBottom: '10px' }}>{commentary.commentator}</h3>
-              <div>{commentary.text}</div>
-            </div>
-          ))}
+      {aiCommentary && (
+        <div style={{ margin: '20px 0', border: '1px solid #ddd', padding: '15px', borderRadius: '5px' }}>
+          <h2>AI Commentary ({perspective} Perspective):</h2>
+          <p>{aiCommentary}</p>
         </div>
       )}
     </div>

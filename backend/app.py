@@ -4,6 +4,7 @@ import requests
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from langchain_community.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,23 +12,45 @@ load_dotenv()
 app = Flask(__name__, static_folder="build", static_url_path="")
 CORS(app)
 
+# Initialize OpenAI model
 llm = ChatOpenAI(
     model="gpt-3.5-turbo",
-    openai_api_key=os.getenv("OPENAI_API_KEY")
+    openai_api_key=os.getenv("OPENAI_API_KEY"),
+    temperature=0.7
 )
 
 SEFARIA_API_URL = "https://www.sefaria.org/api/texts"
 REQUEST_TIMEOUT = 30
 
-@app.route("/")
-def serve_frontend():
-    return send_from_directory(app.static_folder, "index.html")
-
-@app.route("/<path:path>")
-def serve_static_files(path):
-    if os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    return jsonify({"error": "Not Found"}), 404
+# Perspectives for commentary generation
+PERSPECTIVE_PROMPTS = {
+    "Philosophical": """
+    Provide a deep philosophical analysis of this biblical passage. 
+    Explore its underlying metaphysical, ethical, and existential implications. 
+    Draw connections to broader philosophical traditions and concepts.
+    
+    Passage: {passage}
+    
+    Philosophical Analysis:""",
+    
+    "Religious": """
+    Offer a traditional religious interpretation of this biblical passage. 
+    Analyze its spiritual significance, theological meaning, and religious significance. 
+    Incorporate traditional rabbinic and scriptural commentaries.
+    
+    Passage: {passage}
+    
+    Religious Commentary:""",
+    
+    "Secular": """
+    Provide a contemporary, secular scholarly interpretation of this biblical passage. 
+    Examine its historical context, literary structure, and potential societal implications. 
+    Analyze the text from anthropological, linguistic, and historical perspectives.
+    
+    Passage: {passage}
+    
+    Secular Analysis:"""
+}
 
 @app.route("/api/get_passage", methods=["GET"])
 def get_passage():
@@ -45,70 +68,46 @@ def get_passage():
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/api/get_commentaries", methods=["GET"])
-def get_commentaries():
+@app.route("/api/get_ai_commentary", methods=["GET"])
+def get_ai_commentary():
     passage_ref = request.args.get("passage")
+    perspective = request.args.get("perspective", "Secular")
     
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
     
-    # Passage variations to try
-    passage_variations = [
-        passage_ref,
-        passage_ref.replace(" ", "_"),
-        passage_ref.replace(" ", ""),
-        passage_ref.replace("_", " ")
-    ]
+    if perspective not in PERSPECTIVE_PROMPTS:
+        return jsonify({"error": "Invalid perspective"}), 400
     
-    for passage in passage_variations:
-        try:
-            # Debugging: print each URL attempt
-            urls = [
-                f"{SEFARIA_API_URL}/{passage}/commentary",
-                f"{SEFARIA_API_URL}/{passage}/he/commentary"
-            ]
-            
-            for url in urls:
-                print(f"Attempting URL: {url}")
-                
-                response = requests.get(url, timeout=REQUEST_TIMEOUT)
-                print(f"Response status: {response.status_code}")
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    print(f"Response data keys: {data.keys()}")
-                    
-                    # Check if commentary exists
-                    if "commentary" in data and data["commentary"]:
-                        commentaries = []
-                        for comment in data["commentary"][:5]:  # Limit to first 5 comments
-                            text = comment.get("text", "")
-                            if isinstance(text, list):
-                                text = " ".join(filter(None, text))
-                            
-                            # Clean text, remove HTML tags
-                            text = re.sub('<[^<]+?>', '', text).strip()
-                            
-                            # Extract commentator name
-                            commentator = (
-                                comment.get("ref", "").split(" on ")[0] or 
-                                comment.get("collectiveTitle", "") or 
-                                "Unknown"
-                            )
-                            
-                            if text:
-                                commentaries.append({
-                                    "commentator": commentator,
-                                    "text": text
-                                })
-                        
-                        if commentaries:
-                            return jsonify({"commentaries": commentaries})
+    try:
+        # First, get the passage
+        response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}", timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
+        data = response.json()
         
-        except Exception as e:
-            print(f"Error fetching commentaries for {passage}: {e}")
+        # Combine text if it's a list
+        passage_text = data.get("text", "")
+        if isinstance(passage_text, list):
+            passage_text = " ".join(filter(None, passage_text))
+        
+        # Create prompt template
+        prompt = PromptTemplate(
+            input_variables=["passage"],
+            template=PERSPECTIVE_PROMPTS[perspective]
+        )
+        
+        # Generate AI commentary
+        formatted_prompt = prompt.format(passage=passage_text)
+        commentary = llm.predict(formatted_prompt)
+        
+        return jsonify({
+            "commentary": commentary,
+            "perspective": perspective
+        })
     
-    return jsonify({"commentaries": []})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
