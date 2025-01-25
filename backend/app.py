@@ -54,39 +54,42 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
     
     try:
-        # Format passage for API
-        passage = passage_ref.replace(" ", "_")
-        url = f"{SEFARIA_API_URL}/{passage}/he/commentary"
-        print(f"DEBUG: Full URL: {url}")
+        # Try different passage formats
+        passages = [
+            passage_ref.replace(" ", "_"),
+            passage_ref.replace(" ", ""),
+            passage_ref
+        ]
         
-        response = requests.get(url, timeout=15)
-        print(f"DEBUG: Response status code: {response.status_code}")
-        
-        response.raise_for_status()
-        
-        data = response.json()
-        print(f"DEBUG: Data keys: {data.keys()}")
-        print(f"DEBUG: Commentary present: {'commentary' in data}")
-        
-        commentaries = []
-        seen = set()
-        
-        # Limit to first 5 comments for performance
-        if "commentary" in data:
-            print(f"DEBUG: Total commentaries found: {len(data['commentary'])}")
-            for comment in data["commentary"][:5]:
-                text = comment.get("text", "")
-                print(f"DEBUG: Individual comment text: {text}")
+        for passage in passages:
+            url = f"{SEFARIA_API_URL}/{passage}/commentary"
+            print(f"DEBUG: Trying URL: {url}")
+            
+            response = requests.get(url, timeout=15)
+            print(f"DEBUG: Response status code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"DEBUG: Data keys: {data.keys()}")
                 
-                # Rest of the existing code remains the same
-                ...
-
-        return jsonify({"commentaries": commentaries})
-    except requests.Timeout:
-        print("DEBUG: Request timed out")
-        return jsonify({"error": "Request timed out"}), 504
+                commentaries = []
+                if "commentary" in data and data["commentary"]:
+                    print(f"DEBUG: Total commentaries found: {len(data['commentary'])}")
+                    for comment in data["commentary"][:5]:
+                        text = comment.get("text", "")
+                        name = comment.get("ref", "").split(" on ")[0] or "Unknown"
+                        commentaries.append({
+                            "commentator": name,
+                            "text": text
+                        })
+                
+                if commentaries:
+                    return jsonify({"commentaries": commentaries})
+        
+        return jsonify({"commentaries": []})
+    
     except Exception as e:
-        print(f"DEBUG: Comprehensive error in get_commentaries: {str(e)}")
+        print(f"DEBUG: Error in get_commentaries: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
