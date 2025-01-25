@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from dotenv import load_dotenv
 import requests
 
@@ -20,6 +20,7 @@ llm = ChatOpenAI(
 
 # Sefaria API configuration
 SEFARIA_API_URL = "https://www.sefaria.org/api/texts"
+REQUEST_TIMEOUT = 10  # seconds
 
 @app.route("/")
 def serve_frontend():
@@ -39,13 +40,16 @@ def get_passage():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}")
+        response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}", timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
         data = response.json()
         hebrew = data.get("he", "")
         english = data.get("text", "")
         return jsonify({"hebrew": hebrew, "english": english})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except requests.Timeout:
+        return jsonify({"error": "Request to Sefaria API timed out"}), 504
+    except requests.RequestException as e:
+        return jsonify({"error": f"Error fetching passage: {str(e)}"}), 500
 
 @app.route("/api/get_commentaries", methods=["GET"])
 def get_commentaries():
@@ -54,7 +58,11 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}?commentary=1")
+        response = requests.get(
+            f"{SEFARIA_API_URL}/{passage_ref}/he/commentary", 
+            timeout=REQUEST_TIMEOUT
+        )
+        response.raise_for_status()
         data = response.json()
         commentaries = data.get("commentary", [])
         formatted_commentaries = []
@@ -65,8 +73,10 @@ def get_commentaries():
                 "english": commentary.get("text", "")
             })
         return jsonify({"commentaries": formatted_commentaries})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except requests.Timeout:
+        return jsonify({"error": "Request to Sefaria API timed out"}), 504
+    except requests.RequestException as e:
+        return jsonify({"error": f"Error fetching commentaries: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
