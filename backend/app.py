@@ -6,7 +6,8 @@ from langchain_openai import OpenAI
 app = Flask(__name__, static_folder='build', static_url_path='')
 
 # Initialize LangChain with your API key
-llm = OpenAI(model="text-davinci-003", openai_api_key=os.getenv("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"))
+llm = OpenAI(model="text-davinci-003", openai_api_key=os.getenv("OPENAI_API_KEY"))
+
 @app.route('/')
 def serve_index():
     """Serve the React app's index.html file."""
@@ -19,54 +20,76 @@ def get_passage():
     if not passage:
         return jsonify({'error': 'Passage is required.'}), 400
 
-    # Mock implementation
-    hebrew_text = f"Hebrew text for {passage}"
-    english_text = f"English text for {passage}"
-    return jsonify({'hebrew': hebrew_text, 'english': english_text})
+    try:
+        # Generate passage details using LangChain
+        query = f"Provide the Hebrew and English text for the passage {passage}."
+        response = llm.predict(query)
+        # Assuming the response contains JSON-like structure
+        result = response.split("||")
+        hebrew_text = result[0].strip()
+        english_text = result[1].strip()
+
+        return jsonify({'hebrew': hebrew_text, 'english': english_text})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/get_commentaries', methods=['GET'])
 def get_commentaries():
-    """API endpoint to fetch commentaries and generate comparisons."""
+    """API endpoint to fetch commentaries."""
     passage = request.args.get('passage')
     if not passage:
         return jsonify({'error': 'Passage is required.'}), 400
 
-    # Mock implementation of commentaries
-    commentaries = [
-        {'commentator': 'Rashi', 'text': 'Commentary from Rashi.'},
-        {'commentator': 'Ibn Ezra', 'text': 'Commentary from Ibn Ezra.'},
-        {'commentator': 'Ramban', 'text': 'Commentary from Ramban.'}
-    ]
+    try:
+        # Generate commentaries using LangChain
+        query = f"Provide key Jewish commentaries for the passage {passage}."
+        response = llm.predict(query)
+        # Process the response to extract individual commentaries
+        commentaries = []
+        for line in response.split("\n"):
+            if ":" in line:
+                commentator, text = line.split(":", 1)
+                commentaries.append({'commentator': commentator.strip(), 'text': text.strip()})
 
-    comparisons = []
-    for i in range(len(commentaries)):
-        for j in range(i + 1, len(commentaries)):
-            # Generate comparison for each pair of commentaries
-            commentary_1 = commentaries[i]
-            commentary_2 = commentaries[j]
-            prompt = f"""
-            Compare these two commentaries on {passage}:
-            Commentary 1 ({commentary_1['commentator']}): {commentary_1['text']}
-            Commentary 2 ({commentary_2['commentator']}): {commentary_2['text']}
-            Highlight their similarities, differences, and unique insights.
-            """
-            try:
-                response = llm(prompt)
-                comparisons.append({
-                    'commentator_1': commentary_1['commentator'],
-                    'commentator_2': commentary_2['commentator'],
-                    'comparison': response.strip()
-                })
-            except Exception as e:
-                return jsonify({'error': 'Error generating comparison', 'details': str(e)}), 500
+        return jsonify({'commentaries': commentaries})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    return jsonify({'commentaries': commentaries, 'comparisons': comparisons})
+@app.route('/api/get_comparisons', methods=['GET'])
+def get_comparisons():
+    """API endpoint to fetch natural language comparisons between commentaries."""
+    passage = request.args.get('passage')
+    if not passage:
+        return jsonify({'error': 'Passage is required.'}), 400
 
-@app.errorhandler(404)
-def not_found(e):
-    """Handle 404 errors by serving the React app."""
-    return send_from_directory(app.static_folder, 'index.html')
+    try:
+        # Fetch commentaries first
+        query = f"Provide key Jewish commentaries for the passage {passage}."
+        commentary_response = llm.predict(query)
+        commentaries = []
+        for line in commentary_response.split("\n"):
+            if ":" in line:
+                commentator, text = line.split(":", 1)
+                commentaries.append({'commentator': commentator.strip(), 'text': text.strip()})
+
+        # Generate comparisons between the commentaries
+        comparison_query = f"Compare the following commentaries for the passage {passage}:\n"
+        for commentary in commentaries:
+            comparison_query += f"{commentary['commentator']}: {commentary['text']}\n"
+        comparison_query += "Provide a detailed comparison."
+
+        comparison_response = llm.predict(comparison_query)
+        comparisons = comparison_response.strip()
+
+        return jsonify({
+            'commentaries': commentaries,
+            'comparisons': comparisons
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Start the Flask app
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
 
