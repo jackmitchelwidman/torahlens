@@ -45,9 +45,12 @@ def get_passage():
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/api/get_commentaries", methods=["GET"])
+   @app.route("/api/get_commentaries", methods=["GET"])
 def get_commentaries():
     passage_ref = request.args.get("passage")
+    print(f"Received passage: {passage_ref}")
+    print(f"Full URL: {url}")
+    # Rest of the existing code... 
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
 
