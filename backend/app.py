@@ -52,61 +52,57 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        # Use a more specific API endpoint and limit data
-        url = f"{SEFARIA_API_URL}/{passage_ref}?commentary=1&pad=0&multiple=0"
-        session = requests.Session()
-        response = session.get(url, timeout=30)
+        # Format passage for API
+        passage = passage_ref.replace(" ", "_")
+        url = f"{SEFARIA_API_URL}/{passage}/he/commentary"
+        response = requests.get(url, timeout=15)
         response.raise_for_status()
         
         data = response.json()
         commentaries = []
-        seen_texts = set()
+        seen = set()
 
-        # Process only first 10 commentaries for performance
-        for comment in data.get("commentary", [])[:10]:
-            if not comment:
-                continue
+        # Limit to first 5 comments for performance
+        if "commentary" in data:
+            for comment in data["commentary"][:5]:
+                text = comment.get("text", "")
+                # Skip non-English comments
+                if not text or not any(c.isalpha() for c in text):
+                    continue
 
-            # Get text and clean it
-            english_text = comment.get("text", "")
-            if isinstance(english_text, list):
-                english_text = " ".join(str(text) for text in english_text if text)
+                # Clean the text
+                if isinstance(text, list):
+                    text = " ".join(filter(None, text))
+                text = (text.replace("<small>", "")
+                           .replace("</small>", "")
+                           .replace("<sup>", "")
+                           .replace("</sup>", "")
+                           .replace("<i>", "")
+                           .replace("</i>", "")
+                           .replace("<br>", " ")
+                           .replace("<b>", "")
+                           .replace("</b>", ""))
 
-            # Clean HTML tags
-            english_text = (english_text.replace("<small>", "")
-                                     .replace("</small>", "")
-                                     .replace("<sup>", "")
-                                     .replace("</sup>", "")
-                                     .replace("<i>", "")
-                                     .replace("</i>", "")
-                                     .replace("<br>", " ")
-                                     .replace("<b>", "")
-                                     .replace("</b>", ""))
+                # Get commentator name
+                name = (comment.get("collectiveTitle", "") or 
+                       comment.get("ref", "").split(" on ")[0] or 
+                       "Unknown")
 
-            # Get commentator name
-            commentator = (comment.get("ref", "").split(" on ")[0] or 
-                         "Unknown Commentator")
-
-            if not english_text:
-                continue
-
-            text_key = f"{commentator}:{english_text}"
-            if text_key in seen_texts:
-                continue
-
-            seen_texts.add(text_key)
-            commentaries.append({
-                "commentator": commentator,
-                "text": english_text
-            })
+                key = f"{name}:{text}"
+                if key not in seen:
+                    seen.add(key)
+                    commentaries.append({
+                        "commentator": name,
+                        "text": text
+                    })
 
         return jsonify({"commentaries": commentaries})
-        
+
     except requests.Timeout:
-        return jsonify({"error": "Request timed out. Please try again."}), 504
+        return jsonify({"error": "Request timed out"}), 504
     except Exception as e:
         print("Error in get_commentaries:", str(e))
-        return jsonify({"error": f"Error fetching commentaries: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
