@@ -80,7 +80,7 @@ const App = () => {
 
         <div className="perspective-section">
           <h3>AI Commentary Perspective</h3>
-          {['Secular', 'Religious', 'Philosophical'].map((perspectiveOption) => (
+          {['Theological', 'Philosophical', 'Secular'].map((perspectiveOption) => (
             <label key={perspectiveOption} className="radio-label">
               <input
                 type="radio"
