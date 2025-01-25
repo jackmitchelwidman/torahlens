@@ -51,14 +51,15 @@ def get_passage():
     except requests.RequestException as e:
         return jsonify({"error": f"Error fetching passage: {str(e)}"}), 500
 
-@app.route("/api/get_commentaries", methods=["GET"])
+       @app.route("/api/get_commentaries", methods=["GET"])
 def get_commentaries():
     passage_ref = request.args.get("passage")
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        url = f"https://www.sefaria.org/api/texts/{passage_ref}?commentary=1&context=0"
+        # Request English text and commentaries
+        url = f"https://www.sefaria.org/api/texts/{passage_ref}?commentary=1&context=0&language=en"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
@@ -67,21 +68,29 @@ def get_commentaries():
             return jsonify({"commentaries": [], "error": "No commentaries found"}), 200
 
         commentaries = []
+        seen_commentators = set()  # Track unique commentators
+        
         for comm in data.get("commentary", []):
-            commentator = comm.get("heCommentator", "")
-            if not commentator:  # Fallback to English name if Hebrew not available
-                commentator = comm.get("commentator", "Unknown Commentator")
+            # Get commentator name, preferring English
+            commentator = comm.get("commentator", "Unknown Commentator")
+            english_text = comm.get("text", "")
             
+            # Skip empty commentaries or duplicates
+            if not english_text or (commentator, english_text) in seen_commentators:
+                continue
+                
             commentaries.append({
                 "commentator": commentator,
-                "text": comm.get("he", ""),  # Hebrew text
-                "english": comm.get("text", ""),  # English translation
-                "sourceRef": comm.get("ref", ""),  # Source reference
-                "type": comm.get("category", "")  # Type of commentary
+                "english": english_text,
+                "sourceRef": comm.get("ref", "")
             })
+            seen_commentators.add((commentator, english_text))
 
         return jsonify({"commentaries": commentaries})
         
+    except requests.RequestException as e:
+        print("Error fetching commentaries:", str(e))
+        return jsonify({"error": f"Error fetching commentaries: {str(e)}"}), 500 
     except requests.RequestException as e:
         print("Error fetching commentaries:", str(e))
         return jsonify({"error": f"Error fetching commentaries: {str(e)}"}), 500
