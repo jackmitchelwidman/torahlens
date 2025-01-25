@@ -5,7 +5,7 @@ const App = () => {
   const [hebrew, setHebrew] = useState('');
   const [english, setEnglish] = useState('');
   const [aiCommentary, setAiCommentary] = useState('');
-  const [perspective, setPerspective] = useState('Secular');
+  const [perspective, setPerspective] = useState('Theological');
   const [loadingPassage, setLoadingPassage] = useState(false);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [error, setError] = useState('');
