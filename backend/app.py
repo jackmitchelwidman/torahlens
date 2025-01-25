@@ -2,12 +2,15 @@ from flask import Flask, jsonify, request, send_from_directory
 import os
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage
+import requests
 
 # Initialize the Flask app
 app = Flask(__name__, static_folder='build', static_url_path='')
 
 # Initialize LangChain with your OpenAI API key
 llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=os.getenv("OPENAI_API_KEY"))
+
+SEFARIA_API_URL = "https://www.sefaria.org/api/texts/"
 
 @app.route('/')
 def serve_index():
@@ -21,10 +24,15 @@ def get_passage():
     if not passage:
         return jsonify({'error': 'Passage is required.'}), 400
 
-    # Example implementation to fetch Hebrew and English texts for the passage
     try:
-        hebrew_text = f"Hebrew text for {passage}"  # Replace with Sefaria API call
-        english_text = f"English text for {passage}"  # Replace with Sefaria API call
+        # Fetch Hebrew and English texts from Sefaria API
+        response = requests.get(f"{SEFARIA_API_URL}{passage}")
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch passage from Sefaria API.'}), 500
+
+        data = response.json()
+        hebrew_text = data.get('he', 'No Hebrew text available.')
+        english_text = data.get('text', 'No English text available.')
         return jsonify({'hebrew': hebrew_text, 'english': english_text})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -36,15 +44,26 @@ def get_commentaries():
     if not passage:
         return jsonify({'error': 'Passage is required.'}), 400
 
-    # Using LangChain to generate commentary comparisons
-    messages = [
-        SystemMessage(content=f"Compare commentaries for passage: {passage}"),
-        HumanMessage(content="What are the main differences?")
-    ]
-
     try:
-        response = llm(messages)
-        return jsonify({'comparison': response.content})
+        # Fetch commentaries for the passage
+        response = requests.get(f"{SEFARIA_API_URL}{passage}/commentary")
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch commentaries from Sefaria API.'}), 500
+
+        data = response.json()
+        commentaries = data.get('commentary', [])
+        if not commentaries:
+            return jsonify({'message': 'No commentaries available for this passage.'}), 200
+
+        # Use LangChain to summarize or compare commentaries
+        commentary_texts = "\n\n".join(c.get('text', '') for c in commentaries if 'text' in c)
+        messages = [
+            SystemMessage(content="Summarize and compare the following Torah commentaries."),
+            HumanMessage(content=commentary_texts)
+        ]
+        comparison = llm(messages)
+
+        return jsonify({'commentaries': commentaries, 'comparison': comparison.content})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
