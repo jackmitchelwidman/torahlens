@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from langchain.chat_models import ChatOpenAI  # Changed import
+from langchain.chat_models import ChatOpenAI
 from dotenv import load_dotenv
 import requests
 
@@ -9,7 +9,7 @@ import requests
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__, static_folder="../frontend/build", static_url_path="")
+app = Flask(__name__, static_folder="build", static_url_path="")
 CORS(app)
 
 # Set up LangChain Chat Model
