@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory
 import os
-from langchain_community.chat_models import ChatOpenAI
-from langchain_community.schema import SystemMessage, HumanMessage
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import SystemMessage, HumanMessage
 import requests
 
 # Initialize the Flask app
@@ -25,7 +25,6 @@ def get_passage():
         return jsonify({'error': 'Passage is required.'}), 400
 
     try:
-        # Fetch Hebrew and English texts from Sefaria API
         response = requests.get(f"{SEFARIA_API_URL}{passage}")
         if response.status_code != 200:
             return jsonify({'error': 'Failed to fetch passage from Sefaria API.'}), 500
@@ -45,7 +44,6 @@ def get_commentaries():
         return jsonify({'error': 'Passage is required.'}), 400
 
     try:
-        # Fetch data from Sefaria API
         response = requests.get(f"{SEFARIA_API_URL}{passage}?with=links")
         if response.status_code != 200:
             return jsonify({'error': 'Failed to fetch data from Sefaria API.'}), 500
@@ -59,12 +57,10 @@ def get_commentaries():
         if not commentaries:
             return jsonify({'message': 'No commentaries available for this passage.'}), 200
 
-        # Prepare commentary text for LangChain
         commentary_texts = "\n\n".join(
             f"{c.get('source_title')}: {c.get('source_text')}" for c in commentaries
         )
 
-        # Generate a summary or comparison using LangChain
         messages = [
             SystemMessage(content="Compare and summarize the following Torah commentaries."),
             HumanMessage(content=commentary_texts)
