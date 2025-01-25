@@ -6,7 +6,7 @@ from langchain_openai import OpenAI
 app = Flask(__name__, static_folder='build', static_url_path='')
 
 # Initialize LangChain with your API key
-llm = OpenAI(model="text-davinci-003", openai_api_key=os.getenv("OPENAI_API_KEY"))
+llm = OpenAI(model="gpt-3.5-turbo", openai_api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route('/')
 def serve_index():
