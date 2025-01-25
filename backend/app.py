@@ -44,53 +44,62 @@ def get_passage():
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/api/get_commentaries", methods=["GET"])
 def get_commentaries():
     passage_ref = request.args.get("passage")
-    print(f"DEBUG: Received passage: {passage_ref}")
-    
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
     
     try:
-        # Try different passage formats
-        passages = [
-            passage_ref.replace(" ", "_"),
-            passage_ref.replace(" ", ""),
-            passage_ref
+        # Normalize passage reference
+        passage_ref = passage_ref.strip()
+        
+        # Try different formatting options
+        formatted_passages = [
+            passage_ref,  # Original
+            passage_ref.replace(" ", "_"),  # Replace space with underscore
+            passage_ref.replace(" ", ""),  # Remove spaces
         ]
         
-        for passage in passages:
-            url = f"{SEFARIA_API_URL}/{passage}/commentary"
-            print(f"DEBUG: Trying URL: {url}")
+        for formatted_passage in formatted_passages:
+            # Try commentary endpoint
+            commentary_url = f"{SEFARIA_API_URL}/{formatted_passage}/commentary"
             
-            response = requests.get(url, timeout=15)
-            print(f"DEBUG: Response status code: {response.status_code}")
+            response = requests.get(commentary_url, timeout=15)
             
             if response.status_code == 200:
                 data = response.json()
-                print(f"DEBUG: Data keys: {data.keys()}")
                 
-                commentaries = []
+                # Check if commentary exists
                 if "commentary" in data and data["commentary"]:
-                    print(f"DEBUG: Total commentaries found: {len(data['commentary'])}")
-                    for comment in data["commentary"][:5]:
+                    commentaries = []
+                    for comment in data["commentary"]:
+                        # Extract commentator name and text
+                        ref_parts = comment.get("ref", "").split(" on ")
+                        commentator = ref_parts[0] if len(ref_parts) > 0 else "Unknown"
+                        
+                        # Handle text (could be string or list)
                         text = comment.get("text", "")
-                        name = comment.get("ref", "").split(" on ")[0] or "Unknown"
-                        commentaries.append({
-                            "commentator": name,
-                            "text": text
-                        })
-                
-                if commentaries:
+                        if isinstance(text, list):
+                            text = " ".join(filter(None, text))
+                        
+                        # Clean text
+                        text = re.sub('<[^<]+?>', '', text)  # Remove HTML tags
+                        text = text.strip()
+                        
+                        if text:  # Only add non-empty commentaries
+                            commentaries.append({
+                                "commentator": commentator,
+                                "text": text
+                            })
+                    
                     return jsonify({"commentaries": commentaries})
         
         return jsonify({"commentaries": []})
     
     except Exception as e:
-        print(f"DEBUG: Error in get_commentaries: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        print(f"Error fetching commentaries: {e}")
+        return jsonify({"error": "Unable to fetch commentaries"}), 500
 
 
 if __name__ == "__main__":
