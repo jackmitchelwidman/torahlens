@@ -1,9 +1,12 @@
 from flask import Flask, jsonify, request, send_from_directory
 import os
-import requests
+from langchain import OpenAI
 
 # Initialize the Flask app
 app = Flask(__name__, static_folder='build', static_url_path='')
+
+# Initialize LangChain with your API key
+llm = OpenAI(model="text-davinci-003", api_key=os.getenv("LANGCHAIN_API_KEY"))
 
 @app.route('/')
 def serve_index():
@@ -17,40 +20,48 @@ def get_passage():
     if not passage:
         return jsonify({'error': 'Passage is required.'}), 400
 
-    sefaria_url = f"https://www.sefaria.org/api/texts/{passage}"
-    try:
-        response = requests.get(sefaria_url)
-        response.raise_for_status()
-        data = response.json()
-        hebrew_text = '<br>'.join(data.get('he', [])) or "No Hebrew text available."
-        english_text = '<br>'.join(data.get('text', [])) or "No English text available."
-        return jsonify({'hebrew': hebrew_text, 'english': english_text})
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': f"Failed to fetch data from Sefaria API: {str(e)}"}), 500
+    # Mock implementation
+    hebrew_text = f"Hebrew text for {passage}"
+    english_text = f"English text for {passage}"
+    return jsonify({'hebrew': hebrew_text, 'english': english_text})
 
 @app.route('/api/get_commentaries', methods=['GET'])
 def get_commentaries():
-    """API endpoint to fetch commentaries."""
+    """API endpoint to fetch commentaries and generate comparisons."""
     passage = request.args.get('passage')
     if not passage:
         return jsonify({'error': 'Passage is required.'}), 400
 
-    sefaria_url = f"https://www.sefaria.org/api/texts/{passage}?context=0&commentary=1"
-    try:
-        response = requests.get(sefaria_url)
-        response.raise_for_status()
-        data = response.json()
-        commentaries = [
-            {
-                'commentator': commentary.get('collectiveTitle', {}).get('en', 'Unknown'),
-                'text': ' '.join(commentary.get('text', [])) or "No commentary text available."
-            }
-            for commentary in data.get('commentary', [])
-        ]
-        return jsonify({'commentaries': commentaries})
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': f"Failed to fetch data from Sefaria API: {str(e)}"}), 500
+    # Mock implementation of commentaries
+    commentaries = [
+        {'commentator': 'Rashi', 'text': 'Commentary from Rashi.'},
+        {'commentator': 'Ibn Ezra', 'text': 'Commentary from Ibn Ezra.'},
+        {'commentator': 'Ramban', 'text': 'Commentary from Ramban.'}
+    ]
 
+    comparisons = []
+    for i in range(len(commentaries)):
+        for j in range(i + 1, len(commentaries)):
+            # Generate comparison for each pair of commentaries
+            commentary_1 = commentaries[i]
+            commentary_2 = commentaries[j]
+            prompt = f"""
+            Compare these two commentaries on {passage}:
+            Commentary 1 ({commentary_1['commentator']}): {commentary_1['text']}
+            Commentary 2 ({commentary_2['commentator']}): {commentary_2['text']}
+            Highlight their similarities, differences, and unique insights.
+            """
+            try:
+                response = llm(prompt)
+                comparisons.append({
+                    'commentator_1': commentary_1['commentator'],
+                    'commentator_2': commentary_2['commentator'],
+                    'comparison': response.strip()
+                })
+            except Exception as e:
+                return jsonify({'error': 'Error generating comparison', 'details': str(e)}), 500
+
+    return jsonify({'commentaries': commentaries, 'comparisons': comparisons})
 
 @app.errorhandler(404)
 def not_found(e):
@@ -58,7 +69,5 @@ def not_found(e):
     return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
-    # Run the app in debug mode (only for local testing)
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
 

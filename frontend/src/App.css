@@ -28,6 +28,45 @@
   color: #61dafb;
 }
 
+/* Add this to App.css */
+.accordion {
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.accordion-header {
+  background-color: #f7f7f7;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
+}
+
+.accordion-header:hover {
+  background-color: #e6e6e6;
+}
+
+.accordion-body {
+  padding: 10px;
+  font-size: 14px;
+  display: none; /* Initially hidden */
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+}
+
+/* Show the body when the accordion is expanded */
+.accordion-body.expanded {
+  display: block;
+}
+
+
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
