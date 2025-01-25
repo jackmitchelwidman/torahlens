@@ -33,7 +33,6 @@ def get_passage():
     passage_ref = request.args.get("passage")
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
-
     try:
         response = requests.get(f"{SEFARIA_API_URL}/{passage_ref}", timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
@@ -45,26 +44,26 @@ def get_passage():
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
-   @app.route("/api/get_commentaries", methods=["GET"])
+@app.route("/api/get_commentaries", methods=["GET"])
 def get_commentaries():
     passage_ref = request.args.get("passage")
     print(f"Received passage: {passage_ref}")
-    print(f"Full URL: {url}")
-    # Rest of the existing code... 
+    
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
-
+    
     try:
         # Format passage for API
         passage = passage_ref.replace(" ", "_")
         url = f"{SEFARIA_API_URL}/{passage}/he/commentary"
+        print(f"Full URL: {url}")
+        
         response = requests.get(url, timeout=15)
         response.raise_for_status()
         
         data = response.json()
         commentaries = []
         seen = set()
-
         # Limit to first 5 comments for performance
         if "commentary" in data:
             for comment in data["commentary"][:5]:
@@ -72,7 +71,6 @@ def get_commentaries():
                 # Skip non-English comments
                 if not text or not any(c.isalpha() for c in text):
                     continue
-
                 # Clean the text
                 if isinstance(text, list):
                     text = " ".join(filter(None, text))
@@ -85,12 +83,10 @@ def get_commentaries():
                            .replace("<br>", " ")
                            .replace("<b>", "")
                            .replace("</b>", ""))
-
                 # Get commentator name
                 name = (comment.get("collectiveTitle", "") or 
                        comment.get("ref", "").split(" on ")[0] or 
                        "Unknown")
-
                 key = f"{name}:{text}"
                 if key not in seen:
                     seen.add(key)
@@ -98,9 +94,7 @@ def get_commentaries():
                         "commentator": name,
                         "text": text
                     })
-
         return jsonify({"commentaries": commentaries})
-
     except requests.Timeout:
         return jsonify({"error": "Request timed out"}), 504
     except Exception as e:
