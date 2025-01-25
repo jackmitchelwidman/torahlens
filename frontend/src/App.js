@@ -12,6 +12,12 @@ const App = () => {
 
   const backendUrl = ''; // Leave empty for relative path to the backend.
 
+  const stripHtml = (html) => {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  };
+
   const fetchPassage = async () => {
     setLoadingPassage(true);
     setError('');
@@ -21,8 +27,8 @@ const App = () => {
       if (data.error) {
         setError(data.error);
       } else {
-        setHebrew(data.hebrew);
-        setEnglish(data.english);
+        setHebrew(stripHtml(data.hebrew));
+        setEnglish(stripHtml(data.english));
       }
     } catch (err) {
       setError('Error fetching passage. Please try again.');
@@ -113,7 +119,7 @@ const App = () => {
         )}
       </main>
       <footer className="app-footer">
-        <p>Made with love for Torah and technology.</p>
+        <p>TorahLens - Dive Deep</p>
       </footer>
     </div>
   );
