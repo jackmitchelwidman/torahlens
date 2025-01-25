@@ -1,9 +1,11 @@
+```python
 import os
+import re
+import requests
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from langchain_community.chat_models import ChatOpenAI
 from dotenv import load_dotenv
-import requests
 
 load_dotenv()
 
@@ -16,7 +18,7 @@ llm = ChatOpenAI(
 )
 
 SEFARIA_API_URL = "https://www.sefaria.org/api/texts"
-REQUEST_TIMEOUT = 30  # Increased timeout
+REQUEST_TIMEOUT = 30
 
 @app.route("/")
 def serve_frontend():
@@ -47,60 +49,57 @@ def get_passage():
 @app.route("/api/get_commentaries", methods=["GET"])
 def get_commentaries():
     passage_ref = request.args.get("passage")
+    
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
     
-    try:
-        # Normalize passage reference
-        passage_ref = passage_ref.strip()
-        
-        # Try different formatting options
-        formatted_passages = [
-            passage_ref,  # Original
-            passage_ref.replace(" ", "_"),  # Replace space with underscore
-            passage_ref.replace(" ", ""),  # Remove spaces
-        ]
-        
-        for formatted_passage in formatted_passages:
-            # Try commentary endpoint
-            commentary_url = f"{SEFARIA_API_URL}/{formatted_passage}/commentary"
+    passage_variations = [
+        passage_ref,
+        passage_ref.replace(" ", "_"),
+        passage_ref.replace(" ", "")
+    ]
+    
+    for passage in passage_variations:
+        try:
+            url = f"{SEFARIA_API_URL}/{passage}/commentary"
             
-            response = requests.get(commentary_url, timeout=15)
+            response = requests.get(url, timeout=REQUEST_TIMEOUT)
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if commentary exists
+                commentaries = []
                 if "commentary" in data and data["commentary"]:
-                    commentaries = []
                     for comment in data["commentary"]:
-                        # Extract commentator name and text
-                        ref_parts = comment.get("ref", "").split(" on ")
-                        commentator = ref_parts[0] if len(ref_parts) > 0 else "Unknown"
+                        commentator = comment.get("ref", "").split(" on ")[0] or "Unknown"
                         
-                        # Handle text (could be string or list)
                         text = comment.get("text", "")
                         if isinstance(text, list):
                             text = " ".join(filter(None, text))
                         
-                        # Clean text
-                        text = re.sub('<[^<]+?>', '', text)  # Remove HTML tags
+                        text = re.sub('<[^<]+?>', '', text)
                         text = text.strip()
                         
-                        if text:  # Only add non-empty commentaries
+                        if text:
                             commentaries.append({
                                 "commentator": commentator,
                                 "text": text
                             })
-                    
+                
+                if commentaries:
                     return jsonify({"commentaries": commentaries})
         
-        return jsonify({"commentaries": []})
+        except Exception as e:
+            print(f"Error fetching commentaries for {passage}: {e}")
     
-    except Exception as e:
-        print(f"Error fetching commentaries: {e}")
-        return jsonify({"error": "Unable to fetch commentaries"}), 500
-
+    return jsonify({"commentaries": []})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+```
+
+This version:
+- Tries multiple passage formatting options
+- Robust error handling
+- Extracts commentaries with clean text
+- Handles potential list/string text formats
