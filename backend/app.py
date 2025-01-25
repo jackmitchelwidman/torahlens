@@ -45,25 +45,41 @@ def get_commentaries():
         return jsonify({'error': 'Passage is required.'}), 400
 
     try:
-        # Fetch commentaries for the passage
-        response = requests.get(f"{SEFARIA_API_URL}{passage}/commentary")
+        # Fetch data from Sefaria API
+        response = requests.get(f"{SEFARIA_API_URL}{passage}?with=links")
         if response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch commentaries from Sefaria API.'}), 500
+            return jsonify({'error': 'Failed to fetch data from Sefaria API.'}), 500
 
         data = response.json()
-        commentaries = data.get('commentary', [])
+        links = data.get('links', [])
+        commentaries = [
+            link for link in links if link.get('category') == 'Commentary' and 'text' in link
+        ]
+
         if not commentaries:
             return jsonify({'message': 'No commentaries available for this passage.'}), 200
 
-        # Use LangChain to summarize or compare commentaries
-        commentary_texts = "\n\n".join(c.get('text', '') for c in commentaries if 'text' in c)
+        # Process commentaries and generate a comparison
+        commentary_texts = "\n\n".join(
+            f"{c.get('source_text')} (by {c.get('source_title')})"
+            for c in commentaries
+            if 'source_text' in c and 'source_title' in c
+        )
+
+        # Use LangChain to generate a comparison
         messages = [
-            SystemMessage(content="Summarize and compare the following Torah commentaries."),
+            SystemMessage(content="Summarize and compare the following Torah commentaries:"),
             HumanMessage(content=commentary_texts)
         ]
         comparison = llm(messages)
 
-        return jsonify({'commentaries': commentaries, 'comparison': comparison.content})
+        return jsonify({
+            'commentaries': [
+                {'source': c.get('source_title'), 'text': c.get('source_text')}
+                for c in commentaries
+            ],
+            'comparison': comparison.content
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
