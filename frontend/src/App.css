@@ -30,39 +30,35 @@
 
 /* Add this to App.css */
 .accordion {
-  margin: 10px 0;
+  margin-top: 1rem;
+}
+
+.accordion-item {
   border: 1px solid #ccc;
-  border-radius: 5px;
-  overflow: hidden;
+  margin-bottom: 0.5rem;
 }
 
-.accordion-header {
-  background-color: #f7f7f7;
-  border: none;
-  width: 100%;
-  text-align: left;
-  padding: 10px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  outline: none;
-}
-
-.accordion-header:hover {
-  background-color: #e6e6e6;
-}
-
-.accordion-body {
-  padding: 10px;
-  font-size: 14px;
-  display: none; /* Initially hidden */
-  background-color: #fff;
-  border-top: 1px solid #ccc;
-}
-
-/* Show the body when the accordion is expanded */
-.accordion-body.expanded {
+.accordion-title {
   display: block;
+  padding: 0.5rem;
+  background: #f9f9f9;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.accordion-content {
+  display: none;
+  padding: 0.5rem;
+  background: #fff;
+}
+
+.accordion-item input[type="checkbox"]:checked ~ .accordion-content {
+  display: block;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
 }
 
 
