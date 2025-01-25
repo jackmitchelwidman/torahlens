@@ -96,7 +96,7 @@ const App = () => {
             disabled={!english || loadingCommentary}
             className="button-secondary"
           >
-            {loadingCommentary ? 'Generating...' : 'Get AI Commentary'}
+            {loadingCommentary ? 'Ruminating...' : 'Get AI Commentary'}
           </button>
         </div>
 
