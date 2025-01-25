@@ -58,24 +58,33 @@ def get_commentaries():
         return jsonify({"error": "No passage reference provided"}), 400
 
     try:
-        response = requests.get(
-            f"{SEFARIA_API_URL}/{passage_ref}/he/commentary", 
-            timeout=REQUEST_TIMEOUT
-        )
+        # Use the correct Sefaria API endpoint for commentaries
+        url = f"https://www.sefaria.org/api/texts/{passage_ref}?commentary=1&context=0"
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
+        
         data = response.json()
+        
+        # Log the response for debugging
+        print("Sefaria API Response:", data)
+        
+        if not data:
+            return jsonify({"commentaries": [], "error": "No commentaries found"}), 200
+            
         commentaries = data.get("commentary", [])
         formatted_commentaries = []
-        for commentary in commentaries:
+        
+        for comm in commentaries:
             formatted_commentaries.append({
-                "commentator": commentary.get("he_commentator", ""),
-                "text": commentary.get("he", ""),
-                "english": commentary.get("text", "")
+                "commentator": comm.get("heCommentator", comm.get("he_commentator", "")),
+                "text": comm.get("he", ""),
+                "english": comm.get("text", "")
             })
+            
         return jsonify({"commentaries": formatted_commentaries})
-    except requests.Timeout:
-        return jsonify({"error": "Request to Sefaria API timed out"}), 504
+        
     except requests.RequestException as e:
+        print("Error fetching commentaries:", str(e))
         return jsonify({"error": f"Error fetching commentaries: {str(e)}"}), 500
 
 if __name__ == "__main__":
