@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory
 import os
-from langchain_community.chat_models import ChatOpenAI
-from langchain_community.prompts.chat import SystemMessage, HumanMessage
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import SystemMessage, HumanMessage
 
 # Initialize the Flask app
 app = Flask(__name__, static_folder='build', static_url_path='')
