@@ -62,7 +62,7 @@ const App = () => {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>ToraLens</h1>
+        <h1>TorahLens</h1>
       </header>
       <main className="app-main">
         <div className="input-section">
