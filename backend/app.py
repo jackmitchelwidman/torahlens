@@ -1,13 +1,12 @@
 from flask import Flask, jsonify, request, send_from_directory
 import os
-from langchain import OpenAI
+from langchain_openai import OpenAI
 
 # Initialize the Flask app
 app = Flask(__name__, static_folder='build', static_url_path='')
 
 # Initialize LangChain with your API key
-llm = OpenAI(model="text-davinci-003", api_key=os.getenv("LANGCHAIN_API_KEY"))
-
+llm = OpenAI(model="text-davinci-003", openai_api_key=os.getenv("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"))
 @app.route('/')
 def serve_index():
     """Serve the React app's index.html file."""
