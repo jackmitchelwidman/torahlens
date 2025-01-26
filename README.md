@@ -1,2 +1,2 @@
 # torahlens
-A tool for comparing passages from the Torah from the various commentators.
+A tool for diving deep into Torah passage analysis, powered by the Sefaria API and AI.
