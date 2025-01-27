@@ -119,13 +119,20 @@ const App = () => {
               {perspectiveOption}
             </label>
           ))}
-          <button 
-            onClick={fetchAiCommentary} 
-            disabled={!english || loadingCommentary}
-            className="button-secondary"
-          >
-            {loadingCommentary ? 'Ruminating...' : 'Get AI Commentary'}
-          </button>
+          <div className="commentary-button-container">
+            <button 
+              onClick={fetchAiCommentary} 
+              disabled={!english || loadingCommentary}
+              className="button-secondary"
+            >
+              {loadingCommentary ? 'Ruminating...' : 'Get AI Commentary'}
+            </button>
+            {!english && passage && (
+              <div className="button-helper-text">
+                Please fetch the passage first using "Get Passage"
+              </div>
+            )}
+          </div>
         </div>
 
         {error && <div className="error-message">{error}</div>}
@@ -203,6 +210,7 @@ body {
   border: 1px solid #ccc;
   border-radius: 5px;
   width: 70%;
+  margin-right: 10px;
 }
 
 .button-primary, .button-secondary {
@@ -211,6 +219,7 @@ body {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .button-primary {
@@ -218,9 +227,35 @@ body {
   color: white;
 }
 
+.button-primary:hover {
+  background-color: #0046c0;
+}
+
 .button-secondary {
   background-color: #28a745;
   color: white;
+}
+
+.button-secondary:hover {
+  background-color: #218838;
+}
+
+.button-secondary:disabled {
+  background-color: #93c5a5;
+  cursor: not-allowed;
+}
+
+.commentary-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.button-helper-text {
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
 }
 
 .radio-label {
@@ -234,16 +269,23 @@ body {
   text-align: right;
   font-size: 18px;
   color: #0056e6;
+  margin: 10px 0;
+  line-height: 1.6;
 }
 
 .english-text {
   font-size: 18px;
+  margin: 10px 0;
+  line-height: 1.6;
 }
 
 .error-message {
   color: red;
   font-weight: bold;
   margin-top: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #ffebee;
 }
 
 .app-footer {
@@ -258,6 +300,17 @@ body {
 
 .commentary-section {
   scroll-margin-top: 20px;
+}
+
+h2 {
+  color: #0038b8;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.perspective-section h3 {
+  margin-bottom: 15px;
+  color: #0038b8;
 }
 `;
 
