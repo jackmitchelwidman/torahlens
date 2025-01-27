@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const App = () => {
   const [passage, setPassage] = useState('');
@@ -9,6 +9,34 @@ const App = () => {
   const [loadingPassage, setLoadingPassage] = useState(false);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [error, setError] = useState('');
+  const commentaryRef = useRef(null);
+
+  // Add effect to handle scrolling when commentary updates
+  useEffect(() => {
+    if (aiCommentary && commentaryRef.current) {
+      // Try multiple scroll methods
+      const scrollToCommentary = () => {
+        // Method 1: scrollIntoView
+        commentaryRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+        // Method 2: manual scroll as backup
+        const yOffset = -20; // Offset to account for any headers
+        const element = commentaryRef.current;
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        
+        window.scrollTo({
+          top: y,
+          behavior: 'smooth'
+        });
+      };
+
+      // Add a small delay to ensure DOM is ready
+      setTimeout(scrollToCommentary, 300);
+    }
+  }, [aiCommentary]);
 
   const backendUrl = ''; // Leave empty for relative path to the backend.
 
@@ -112,7 +140,7 @@ const App = () => {
         )}
 
         {aiCommentary && (
-          <div className="commentary-section">
+          <div ref={commentaryRef} className="commentary-section">
             <h2>AI Commentary ({perspective} Perspective):</h2>
             <p>{aiCommentary}</p>
           </div>
@@ -135,6 +163,7 @@ body {
   margin: 0;
   background-color: #f5f5f5;
   color: #333;
+  scroll-behavior: smooth;
 }
 
 .app-container {
@@ -142,6 +171,7 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  padding-bottom: 60px; /* Add padding to account for fixed footer */
 }
 
 .app-header {
@@ -225,7 +255,10 @@ body {
   position: fixed;
   bottom: 0;
 }
+
+.commentary-section {
+  scroll-margin-top: 20px;
+}
 `;
 
 document.head.insertAdjacentHTML("beforeend", `<style>${styles}</style>`);
-
