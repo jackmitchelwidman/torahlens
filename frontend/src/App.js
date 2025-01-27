@@ -1,6 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './styles/App.css';
 
+const AboutModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>
+          Close
+        </button>
+        <h2>About TorahLens</h2>
+        <p>
+          TorahLens is an innovative tool that brings ancient biblical texts into dialogue with modern perspectives. 
+          By combining traditional Hebrew scripture with AI-powered analysis, it offers users the unique ability 
+          to explore Torah passages through multiple viewpoints - theological, philosophical, and secular. Whether 
+          you're a scholar, student, or seeker, TorahLens helps bridge the gap between ancient wisdom and 
+          contemporary understanding, providing fresh insights into these timeless texts.
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const [passage, setPassage] = useState('');
   const [hebrew, setHebrew] = useState('');
@@ -10,6 +32,7 @@ const App = () => {
   const [loadingPassage, setLoadingPassage] = useState(false);
   const [loadingCommentary, setLoadingCommentary] = useState(false);
   const [error, setError] = useState('');
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const commentaryRef = useRef(null);
 
   useEffect(() => {
@@ -105,8 +128,22 @@ const App = () => {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>TorahLens</h1>
+        <div className="header-content">
+          <h1>TorahLens</h1>
+          <button 
+            className="about-link"
+            onClick={() => setIsAboutOpen(true)}
+          >
+            About TorahLens
+          </button>
+        </div>
       </header>
+
+      <AboutModal 
+        isOpen={isAboutOpen} 
+        onClose={() => setIsAboutOpen(false)} 
+      />
+
       <main className="app-main">
         <div className="input-section">
           <div className="input-wrapper">

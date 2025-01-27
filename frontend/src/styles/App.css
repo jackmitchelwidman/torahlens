@@ -28,11 +28,41 @@ body {
   margin-bottom: 30px;
 }
 
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
 .app-header h1 {
   margin: 0;
   font-weight: 700;
   font-size: 2.2em;
   letter-spacing: 0.5px;
+}
+
+.about-link {
+  position: absolute;
+  right: 20px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  text-decoration: none;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+  font-family: 'Heebo', sans-serif;
+}
+
+.about-link:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .app-main {
@@ -232,6 +262,62 @@ h2 {
   font-size: 0.9rem;
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  color: #0038b8;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.modal-content p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #f1f5f9;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: #e2e8f0;
+  color: #0038b8;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .app-main {
@@ -254,5 +340,10 @@ h2 {
 
   .hebrew-text, .english-text {
     font-size: 1rem;
+  }
+
+  .about-link {
+    font-size: 0.8rem;
+    padding: 6px 10px;
   }
 }
