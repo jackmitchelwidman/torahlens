@@ -43,11 +43,30 @@ const App = () => {
   };
 
   const fetchPassage = async () => {
+    if (!passage.trim()) {
+      setError('Please enter a passage reference');
+      return;
+    }
+
     setLoadingPassage(true);
     setError('');
+    setHebrew('');
+    setEnglish('');
+    setAiCommentary('');
+    
     try {
       const response = await fetch(`${backendUrl}/api/get_passage?passage=${encodeURIComponent(passage.trim())}`);
       const data = await response.json();
+      
+      if (response.status === 400) {
+        setError(data.error || 'Please provide a valid reference format, such as "Genesis 1:1" or "בראשית א:א"');
+        return;
+      }
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch passage');
+      }
+      
       if (data.error) {
         setError(data.error);
       } else {
@@ -55,7 +74,7 @@ const App = () => {
         setEnglish(stripHtml(data.english));
       }
     } catch (err) {
-      setError('Error fetching passage. Please try again.');
+      setError('Error fetching passage. Please try again with a valid reference.');
       console.error(err);
     } finally {
       setLoadingPassage(false);
@@ -100,13 +119,15 @@ const App = () => {
               dir="auto"
             />
             <div className="input-helper-text">
-              You can enter references in English (e.g., "Genesis 1:1") or Hebrew (e.g., "בראשית א:א")
+              Enter a reference like "Genesis 1:1", "Genesis 1", or in Hebrew "בראשית א:א"
             </div>
           </div>
           <button onClick={fetchPassage} disabled={loadingPassage} className="button-primary">
             {loadingPassage ? 'Loading...' : 'Get Passage'}
           </button>
         </div>
+
+        {error && <div className="error-message">{error}</div>}
 
         <div className="perspective-section">
           <h3>AI Commentary Perspective</h3>
@@ -136,8 +157,6 @@ const App = () => {
             )}
           </div>
         </div>
-
-        {error && <div className="error-message">{error}</div>}
 
         {english && (
           <div className="passage-section">

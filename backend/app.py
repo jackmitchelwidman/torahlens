@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
@@ -29,6 +30,17 @@ HEBREW_BOOK_NAMES = {
     'דברים': 'Deuteronomy'
     # Add more mappings as needed
 }
+
+def is_valid_reference(ref):
+    """Check if the reference format is valid"""
+    # Convert Hebrew reference to English if necessary
+    ref = convert_hebrew_reference(ref)
+    
+    # Basic pattern for valid references:
+    # Book name followed by optional chapter and verse
+    # e.g., "Genesis", "Genesis 1", "Genesis 1:1"
+    valid_pattern = r'^[A-Za-z\s]+(?:\s+\d+(?::\d+)?)?$'
+    return bool(re.match(valid_pattern, ref))
 
 def convert_hebrew_reference(ref):
     """Convert Hebrew reference to English"""
@@ -92,6 +104,11 @@ def get_passage():
     passage_ref = request.args.get("passage")
     if not passage_ref:
         return jsonify({"error": "No passage reference provided"}), 400
+
+    if not is_valid_reference(passage_ref):
+        return jsonify({
+            "error": "Please provide a valid reference format, such as 'Genesis 1:1', 'Genesis 1', or 'בראשית א:א'"
+        }), 400
         
     # Convert Hebrew reference to English if necessary
     english_ref = convert_hebrew_reference(passage_ref)
