@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import './styles/App.css';
 
 const App = () => {
   const [passage, setPassage] = useState('');
@@ -11,19 +12,15 @@ const App = () => {
   const [error, setError] = useState('');
   const commentaryRef = useRef(null);
 
-  // Add effect to handle scrolling when commentary updates
   useEffect(() => {
     if (aiCommentary && commentaryRef.current) {
-      // Try multiple scroll methods
       const scrollToCommentary = () => {
-        // Method 1: scrollIntoView
         commentaryRef.current?.scrollIntoView({ 
           behavior: 'smooth',
           block: 'start'
         });
 
-        // Method 2: manual scroll as backup
-        const yOffset = -20; // Offset to account for any headers
+        const yOffset = -20;
         const element = commentaryRef.current;
         const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
         
@@ -33,12 +30,11 @@ const App = () => {
         });
       };
 
-      // Add a small delay to ensure DOM is ready
       setTimeout(scrollToCommentary, 300);
     }
   }, [aiCommentary]);
 
-  const backendUrl = ''; // Leave empty for relative path to the backend.
+  const backendUrl = '';
 
   const stripHtml = (html) => {
     const div = document.createElement('div');
@@ -94,13 +90,19 @@ const App = () => {
       </header>
       <main className="app-main">
         <div className="input-section">
-          <input
-            type="text"
-            value={passage}
-            onChange={(e) => setPassage(e.target.value)}
-            placeholder="Enter passage (e.g., Genesis 1:1)"
-            className="input-field"
-          />
+          <div className="input-wrapper">
+            <input
+              type="text"
+              value={passage}
+              onChange={(e) => setPassage(e.target.value)}
+              placeholder="Enter passage (e.g., Genesis 1:1 or בראשית א:א)"
+              className="input-field"
+              dir="auto"
+            />
+            <div className="input-helper-text">
+              You can enter references in English (e.g., "Genesis 1:1") or Hebrew (e.g., "בראשית א:א")
+            </div>
+          </div>
           <button onClick={fetchPassage} disabled={loadingPassage} className="button-primary">
             {loadingPassage ? 'Loading...' : 'Get Passage'}
           </button>
@@ -161,157 +163,3 @@ const App = () => {
 };
 
 export default App;
-
-/** CSS styles **/
-
-const styles = `
-body {
-  font-family: 'Alef', sans-serif;
-  margin: 0;
-  background-color: #f5f5f5;
-  color: #333;
-  scroll-behavior: smooth;
-}
-
-.app-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  padding-bottom: 60px; /* Add padding to account for fixed footer */
-}
-
-.app-header {
-  background-color: #0038b8;
-  color: white;
-  width: 100%;
-  text-align: center;
-  padding: 15px 0;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.app-main {
-  max-width: 800px;
-  width: 100%;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  margin: 20px 0;
-}
-
-.input-section, .perspective-section, .passage-section, .commentary-section {
-  margin-bottom: 20px;
-}
-
-.input-field {
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 70%;
-  margin-right: 10px;
-}
-
-.button-primary, .button-secondary {
-  padding: 10px 15px;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.button-primary {
-  background-color: #0056e6;
-  color: white;
-}
-
-.button-primary:hover {
-  background-color: #0046c0;
-}
-
-.button-secondary {
-  background-color: #28a745;
-  color: white;
-}
-
-.button-secondary:hover {
-  background-color: #218838;
-}
-
-.button-secondary:disabled {
-  background-color: #93c5a5;
-  cursor: not-allowed;
-}
-
-.commentary-button-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.button-helper-text {
-  color: #666;
-  font-size: 14px;
-  font-style: italic;
-}
-
-.radio-label {
-  margin-right: 15px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.hebrew-text {
-  direction: rtl;
-  text-align: right;
-  font-size: 18px;
-  color: #0056e6;
-  margin: 10px 0;
-  line-height: 1.6;
-}
-
-.english-text {
-  font-size: 18px;
-  margin: 10px 0;
-  line-height: 1.6;
-}
-
-.error-message {
-  color: red;
-  font-weight: bold;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 5px;
-  background-color: #ffebee;
-}
-
-.app-footer {
-  text-align: center;
-  padding: 10px 0;
-  background-color: #0038b8;
-  color: white;
-  width: 100%;
-  position: fixed;
-  bottom: 0;
-}
-
-.commentary-section {
-  scroll-margin-top: 20px;
-}
-
-h2 {
-  color: #0038b8;
-  margin-top: 20px;
-  margin-bottom: 10px;
-}
-
-.perspective-section h3 {
-  margin-bottom: 15px;
-  color: #0038b8;
-}
-`;
-
-document.head.insertAdjacentHTML("beforeend", `<style>${styles}</style>`);
