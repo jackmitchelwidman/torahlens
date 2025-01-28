@@ -72,6 +72,13 @@ const App = () => {
     return div.textContent || div.innerText || '';
   };
 
+  const cleanHebrewText = (text) => {
+    return text
+      .replace(/\u200b/g, '')  // Remove zero-width spaces
+      .replace(/\u00a0/g, ' ') // Replace non-breaking spaces
+      .replace(/[\u0591-\u05C7]/g, ''); // Optionally remove cantillation marks
+  };
+
   const fetchPassage = async () => {
     if (!passage.trim()) {
       setError('Please enter a passage reference');
@@ -100,7 +107,7 @@ const App = () => {
       if (data.error) {
         setError(data.error);
       } else {
-        setHebrew(stripHtml(data.hebrew));
+        setHebrew(cleanHebrewText(stripHtml(data.hebrew)));
         setEnglish(stripHtml(data.english));
       }
     } catch (err) {
@@ -122,31 +129,12 @@ const App = () => {
     setAiCommentary("");
 
     try {
-      // Build URL with explicit encoding
       const url = new URL(`${backendUrl}/api/get_ai_commentary`);
       url.searchParams.append('passage', encodeURIComponent(passage.trim()));
       url.searchParams.append('perspective', perspective);
-      
-      console.log('Making request to:', url.toString());
-      console.log('Using perspective:', perspective);
 
       const response = await fetch(url.toString());
-      console.log('Response status:', response.status);
-      
-      // Get the raw text first
-      const rawText = await response.text();
-      console.log('Raw response text:', rawText);
-      
-      // Try to parse as JSON
-      let data;
-      try {
-        data = JSON.parse(rawText);
-        console.log('Parsed JSON:', data);
-      } catch (e) {
-        console.error('JSON parse error:', e);
-        setError('Server returned invalid JSON. Raw response: ' + rawText.substring(0, 100) + '...');
-        return;
-      }
+      const data = await response.json();
 
       if (!response.ok) {
         setError(data.error || `HTTP error ${response.status}`);
@@ -213,10 +201,7 @@ const App = () => {
           <div className="perspective-options">
             <select 
               value={perspective}
-              onChange={(e) => {
-                console.log('Setting perspective to:', e.target.value);
-                setPerspective(e.target.value);
-              }}
+              onChange={(e) => setPerspective(e.target.value)}
               className="perspective-select"
             >
               {PERSPECTIVES.map((p) => (

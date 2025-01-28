@@ -1,3 +1,5 @@
+
+
 .App {
   text-align: center;
 }
@@ -61,6 +63,12 @@
   font-weight: bold;
 }
 
+.hebrew-text {
+  font-family: "Noto Sans Hebrew", "Arial", "Segoe UI", "Tahoma", sans-serif;
+  font-size: 16px; /* Adjust size as needed */
+  direction: rtl; /* Hebrew is read from right to left */
+}
+
 
 
 @keyframes App-logo-spin {
@@ -70,4 +78,5 @@
   to {
     transform: rotate(360deg);
   }
+
 }
