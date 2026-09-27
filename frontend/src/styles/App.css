@@ -1,6 +1,15 @@
 /* Import Heebo font for modern Israeli typography */
 @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap');
 
+/* Blue marble surface: SVG veining over a deep blue base */
+.marble {
+  background-color: #0038b8;
+  background-image: url('./marble.jpg');
+  background-size: cover;
+  background-position: center;
+  color: white;
+}
+
 body {
   font-family: 'Heebo', 'Alef', sans-serif;
   margin: 0;
@@ -19,12 +28,11 @@ body {
 }
 
 .app-header {
-  background: linear-gradient(135deg, #0038b8 0%, #005ce6 100%);
-  color: white;
   width: 100%;
   text-align: center;
-  padding: 25px 0;
-  box-shadow: 0 3px 10px rgba(0, 56, 184, 0.15);
+  padding: 30px 0;
+  box-shadow: 0 6px 18px rgba(0, 40, 130, 0.35);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.6);
   margin-bottom: 30px;
 }
 
@@ -41,8 +49,9 @@ body {
 .app-header h1 {
   margin: 0;
   font-weight: 700;
-  font-size: 2.2em;
-  letter-spacing: 0.5px;
+  font-size: 2.4em;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 6px rgba(0, 20, 80, 0.6);
 }
 
 .about-link {
@@ -55,9 +64,10 @@ body {
   cursor: pointer;
   padding: 8px 12px;
   text-decoration: none;
-  opacity: 0.9;
+  opacity: 0.95;
   transition: opacity 0.2s ease;
   font-family: 'Heebo', sans-serif;
+  text-shadow: 0 1px 3px rgba(0, 20, 80, 0.6);
 }
 
 .about-link:hover {
@@ -73,6 +83,104 @@ body {
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   margin: 20px 0;
+}
+
+.overview-body {
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+.overview-body p {
+  margin: 0 0 12px;
+}
+
+.overview-body h3 {
+  margin: 16px 0 8px;
+  font-size: 1.05em;
+  color: #0038b8;
+}
+
+.overview-body ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.overview-body li {
+  margin-bottom: 8px;
+}
+
+.overview-note {
+  font-size: 0.92em;
+  color: #475569;
+}
+
+.modal-content {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+/* Home state: search box front and center, little else */
+.app-main.home {
+  background: transparent;
+  box-shadow: none;
+  padding-top: 8vh;
+  text-align: center;
+}
+
+.tagline {
+  margin: 0 auto 28px;
+  max-width: 560px;
+  font-size: 1.1rem;
+  color: #475569;
+}
+
+.home .input-section {
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.home .input-wrapper {
+  width: 100%;
+  max-width: 640px;
+}
+
+.home .input-field {
+  padding: 16px 24px;
+  font-size: 1.15rem;
+  border-radius: 999px;
+  border-color: #dfe6f3;
+  box-shadow: 0 2px 10px rgba(0, 56, 184, 0.08);
+}
+
+.home .input-field:focus {
+  box-shadow: 0 4px 16px rgba(0, 56, 184, 0.18);
+}
+
+.examples {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: -20px 0 30px;
+}
+
+.home .examples {
+  margin: 0 0 22px;
+}
+
+.examples-label {
+  margin-right: 4px;
+}
+
+.how-link {
+  background: none;
+  border: none;
+  color: #0038b8;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .input-section {
@@ -127,16 +235,20 @@ body {
 
 .button-primary {
   background-color: #0038b8;
+  background-image: url('./marble.jpg');
+  background-size: 600px 300px;
+  background-position: 30% 60%;
   color: white;
-  box-shadow: 0 2px 4px rgba(0, 56, 184, 0.2);
+  text-shadow: 0 1px 3px rgba(0, 20, 80, 0.6);
+  box-shadow: 0 2px 6px rgba(0, 40, 130, 0.35);
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .button-primary:hover:not(:disabled) {
-  background-color: #0046e5;
+  filter: brightness(1.12);
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 56, 184, 0.25);
+  box-shadow: 0 4px 10px rgba(0, 40, 130, 0.4);
 }
 
 .button-primary:active:not(:disabled) {
@@ -144,19 +256,22 @@ body {
 }
 
 .button-secondary {
-  background-color: #28a745;
-  color: white;
-  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+  background-color: white;
+  color: #0038b8;
+  border: 2px solid #0038b8;
+  box-shadow: 0 2px 4px rgba(0, 56, 184, 0.15);
 }
 
 .button-secondary:hover:not(:disabled) {
-  background-color: #2fb344;
+  background-color: #eef3ff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(40, 167, 69, 0.25);
+  box-shadow: 0 4px 8px rgba(0, 56, 184, 0.2);
 }
 
 .button-secondary:disabled {
-  background-color: #9ed5b0;
+  color: #a3b3d6;
+  border-color: #cdd7ee;
+  background-color: #f8fafc;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -224,6 +339,64 @@ body {
   color: #2c3e50;
 }
 
+.passage-ref {
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.example-chip {
+  display: inline-block;
+  margin: 6px 6px 0 0;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  font-family: 'Heebo', sans-serif;
+  color: #0038b8;
+  background: white;
+  border: 1px solid #0038b8;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.example-chip:hover {
+  background: #0038b8;
+  color: white;
+}
+
+.passage-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.passage-nav .button-secondary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.resolved-note {
+  font-size: 0.9em;
+  color: #64748b;
+  font-style: italic;
+  margin: -6px 0 12px;
+}
+
+.verse {
+  margin: 0 0 8px 0;
+}
+
+.verse-number {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: #94a3b8;
+  vertical-align: super;
+  margin: 0 4px;
+}
+
 .error-message {
   color: #dc2626;
   font-weight: 500;
@@ -253,12 +426,12 @@ h2 {
 .app-footer {
   text-align: center;
   padding: 15px 0;
-  background: linear-gradient(135deg, #0038b8 0%, #005ce6 100%);
-  color: white;
   width: 100%;
   position: fixed;
   bottom: 0;
-  box-shadow: 0 -3px 10px rgba(0, 56, 184, 0.15);
+  box-shadow: 0 -6px 18px rgba(0, 40, 130, 0.35);
+  border-top: 3px solid rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 20, 80, 0.6);
   font-size: 0.9rem;
 }
 
@@ -322,6 +495,15 @@ h2 {
 @media (max-width: 768px) {
   .app-main {
     padding: 20px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .about-link {
+    position: static;
   }
 
   .input-section {
