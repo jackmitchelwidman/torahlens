@@ -5,3 +5,5 @@ deploy.sh
 __pycache__/
 *.pyc
 .env
+connect-domain.sh
+add-validation-records.sh

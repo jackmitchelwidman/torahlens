@@ -18,7 +18,7 @@ CORS(app)
 
 SEFARIA_API_URL = "https://www.sefaria.org/api/texts"
 REQUEST_TIMEOUT = 30
-SEFARIA_HEADERS = {"User-Agent": "TorahLens/1.0 (+https://github.com/jackmitchelwidman/torahlens)"}
+SEFARIA_HEADERS = {"User-Agent": "TorahDeep/1.0 (+https://github.com/jackmitchelwidman/torahlens)"}
 
 def clean_segments(text):
     """Turn Sefaria text (str or nested list) into a flat list of clean verse strings."""

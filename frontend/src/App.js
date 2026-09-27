@@ -11,7 +11,7 @@ const PERSPECTIVES = [
 const Overview = () => (
   <div className="overview-body">
     <p>
-      TorahLens lets you read any passage of the Hebrew Bible in Hebrew and in English,
+      TorahDeep lets you read any passage of the Hebrew Bible in Hebrew and in English,
       then get a commentary on it written by an AI from the perspective you choose. The text comes
       from Sefaria, a free online library of Jewish texts: the traditional Hebrew alongside a modern
       Jewish Publication Society translation.
@@ -55,7 +55,7 @@ const AboutModal = ({ isOpen, onClose }) => {
         <button className="modal-close" onClick={onClose}>
           Close
         </button>
-        <h2>About TorahLens</h2>
+        <h2>About TorahDeep</h2>
         <Overview />
       </div>
     </div>
@@ -223,12 +223,12 @@ const App = () => {
     <div className="app-container">
       <header className="app-header marble">
         <div className="header-content">
-          <h1>TorahLens</h1>
+          <h1>TorahDeep</h1>
           <button 
             className="about-link"
             onClick={() => setIsAboutOpen(true)}
           >
-            About TorahLens
+            About TorahDeep
           </button>
         </div>
       </header>
@@ -342,7 +342,7 @@ const App = () => {
         )}
       </main>
       <footer className="app-footer marble">
-        <p>TorahLens - Dive Deep</p>
+        <p>TorahDeep &middot; Texts from Sefaria</p>
       </footer>
     </div>
   );
